@@ -1,6 +1,7 @@
 from RRT import *
 import random
 from z3 import *
+from pydraw import *
 
 def getObs(n):
     obs = []
@@ -22,7 +23,8 @@ def main():
     n = 1
     obs = getObs(n)
 
-    path = G.plan(5000, (450,500,450,500), 0.3, obs)
+    screen = initDraw()
+    path = G.plan(5000, (450,500,450,500), 0.1, obs, 0, screen)
     if path == None:
         print 'No path find'
     else:

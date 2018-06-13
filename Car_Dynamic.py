@@ -3,11 +3,26 @@ import numpy as np
 import matplotlib.pyplot as plt
 import math
 
+
+'''
+    Bicycle Car Dynamic model. 
+    State represetned by [xg, yg, theta, vy, r], where: 
+        xg, yg are the location center of gravity of the car
+        theta is orientation of the car
+        vy is the lateral speed
+        r is the yaw rate/angular velocity
+
+        longitudinal speed vx is viewed as a constant in this model
+    Source: http://www.cs.cmu.edu/~motionplanning/reading/PlanningforDynamicVeh-1.pdf 
+    Inputs: Xn - current state; a list
+            delta_f - steering angle of the car
+    Output: dydt
+'''
 def car_dynamic(Xn, delta_f):
-    # xg, yg represents the center of gravity of the car
+    # xg, yg represent the location center of gravity of the car
     # theta is orientation
     # vy is the lateral speed
-    # psi is the yaw rate/angular velocity
+    # r is the yaw rate/angular velocity
     xg, yg, theta, vy, r = Xn
     xg = float(xg)
     yg = float(yg)

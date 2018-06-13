@@ -11,13 +11,12 @@ def getEqn(x, y, start, end):
         x2 = end[0]
         y2 = end[1]
 
+        # If the line is not perpendicular to x-axis, calculate slope
         if x1 != x2:
             k = (y1-y2)/float(x1-x2)
+        # Otherwise, we cannot calculate the slope
         else:
             return x == x1
-        # print k
-        # x = Real('x')
-        # y = Real('y')
 
         return y == k*(x-x2) + y2
         
@@ -36,9 +35,12 @@ def goalCheck(Xnew, goal):
             False if not 
 '''
 def obsCheck(x, y, rrtLine, obsLine, p1, p2, ob1, ob2):
+    # Initialize solver() and add two lines into it
     s = Solver()
     s.add(rrtLine)
     s.add(obsLine)
+
+    # Add endpoints to define boundry
     if p1[0] < p2[0]:
         s.add(And(x>=p1[0], x<=p2[0]))
     else:
@@ -52,6 +54,7 @@ def obsCheck(x, y, rrtLine, obsLine, p1, p2, ob1, ob2):
     s.add(And(x>=ob1[0], x<=ob1[0]))
     s.add(And(y>=ob1[1], y<=ob2[1]))
 
+    # Check result
     if s.check() == sat:
         return True
     else:
@@ -74,19 +77,17 @@ def collisionCheck(p1, p2, obs):
 
     flag = False
     rrtLine = getEqn(x, y, (x1,y1), (x2, y2))
+    # Iterates to see if rrtLine intersects with any obstacles 
     for ob in obs:
         obsLine = getEqn(x, y, ob[0], ob[1])
-        # print rrtLine 
         if obsCheck(x, y, rrtLine, obsLine, (x1,y1), (x2, y2), ob[0], ob[1]) == True:
-            # print "rrtLine is ", rrtLine
-            # print "obsLine is ", obsLine
             flag = True
     
     return flag
 
 def eucDistance(p1, p2):
     return sqrt((p1[0]-p2[0])*(p1[0]-p2[0]) + (p1[1]-p2[1])*(p1[1]-p2[1]))
-    
+
 def randomChecker(p, ob):
     l1 = eucDistance(p, ob[0])
     l2 = eucDistance(p, ob[1])
@@ -96,8 +97,12 @@ def randomChecker(p, ob):
     h = sin(beta)*l2
     return h < 10
 
+'''
+    This function checks if the given point 
+    can connect directly to the goal region (center of the square)
+'''
 def connectChecker(p, goal, obs):
-    a = (goal[0], goal[2])
+    a = ((goal[1]+goal[0])/2, (goal[3]+goal[2])/2)
     # b = (goal[0], goal[3])
     # c = (goal[1], goal[2])
     # d = (goal[1], goal[3])

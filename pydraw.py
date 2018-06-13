@@ -7,6 +7,9 @@ black = (20, 20, 40)
 red = (255, 0, 0)
 blue = (0, 0, 255)
 
+'''
+    This function nitializes pygame interface
+'''
 def initDraw():
     pygame.init()
     screen = pygame.display.set_mode(WINSIZE)
@@ -15,6 +18,9 @@ def initDraw():
     screen.fill(black)
     return screen
 
+'''
+    This function updates current status of planner
+'''
 def drawScreen(screen, p1, p2, goal, obs):
     pygame.draw.rect(screen, red, (goal[0],goal[2],goal[1]-goal[0],goal[3]-goal[2]))
     pygame.draw.line(screen,white,p1,p2)
