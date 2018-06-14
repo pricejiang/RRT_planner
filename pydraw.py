@@ -31,3 +31,13 @@ def drawScreen(screen, p1, p2, goal, obs):
     for e in pygame.event.get():
 	   if e.type == QUIT or (e.type == KEYUP and e.key == K_ESCAPE):
 	        sys.exit("Leaving because you requested it.")
+
+def drawPath(screen, path, goal, obs):
+    screen.fill(black)
+    for i in range(len(path)):
+        if i == len(path)-1:
+            break
+        p1 = (path[i][0], path[i][1])
+        p2 = (path[i+1][0], path[i+1][1])
+        drawScreen(screen, p1, p2, goal, obs)
+

@@ -2,6 +2,7 @@ from RRT import *
 import random
 from z3 import *
 from pydraw import *
+import time
 
 def getObs(n):
     obs = []
@@ -17,19 +18,27 @@ def getObs(n):
     return obs
 
 def main():
-    G = RRT([350, 270, 0.0, 0.0, 0.0])
+    G = RRT([350, 270, -1.0, 0.0, 0.0])
     obs = []
     
     n = 1
     obs = getObs(n)
+    goal = (450,500,450,500)
 
     screen = initDraw()
-    path = G.plan(5000, (450,500,450,500), 0.1, obs, 0, screen)
+
+    startTime = time.time()
+    path = G.plan(5000, goal, 0.1, obs, 0, screen)
+    endTime = time.time()
+
     if path == None:
         print 'No path find'
     else:
         print 'goal reached'
         print path
+        drawPath(screen, path, goal, obs)
+
+    print 'Used time ', endTime-startTime, ' seconds'
     
 if __name__ == '__main__':
     main()

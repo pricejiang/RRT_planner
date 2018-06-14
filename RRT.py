@@ -62,7 +62,10 @@ class RRT():
         Output: the nearest node in RRT search tree to the point Xrand 
     '''
     def findNearest(self, Xrand):
-        nn = self.nodes[0]
+        if len(self.nodes) == 1:
+            nn = self.nodes[0]
+        else:
+            nn = self.nodes[1]
         for p in self.nodes:
             if self.dist(p.state, Xrand) < self.dist(nn.state, Xrand):
                 nn = p
@@ -117,10 +120,10 @@ class RRT():
     def getPath(self, Xnew):
         node = Xnew
         path = []
-        path.append(node)
+        path.append(node.state)
         while(node != self.Xinit):
             node = node.parent
-            path.append(node)
+            path.append(node.state)
         path.reverse()
         return path
    
@@ -140,6 +143,7 @@ class RRT():
         NOTE: Xcritic is set at point where it may directly connect to Xgoal
     '''
     def plan(self, K, goal, p, obs, flag, screen):
+        
         if p > 1 or p < 0:
             print "invalid p"
             return None
@@ -212,7 +216,7 @@ class RRT():
         return np.sqrt((x1-x2)*(x1-x2) + (y1-y2)*(y1-y2) + theta_diff*theta_diff)
 
     '''
-        This functions cleans the some nodes in self.nodes when collision happens
+        This functions discard some nodes in self.nodes when collision happens
         The reason to do this is because once a collision happens, 
         this tree branch will be useless
     '''
