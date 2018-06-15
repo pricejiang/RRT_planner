@@ -34,7 +34,7 @@ def car_dynamic(Xn, delta_f):
     # mass of the car, unit: kg
     m = 1700
     # longitudinal velocity, unit: m/s
-    vx = 7
+    vx = 28
     # length of front half of the car, unit: m
     Lf = 2
     # length of rear half of the car, unit: m

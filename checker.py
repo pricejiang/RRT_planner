@@ -82,13 +82,15 @@ def collisionCheck(p1, p2, obs):
         obsLine = getEqn(x, y, ob[0], ob[1])
         if obsCheck(x, y, rrtLine, obsLine, (x1,y1), (x2, y2), ob[0], ob[1]) == True:
             flag = True
+        # if distanceChecker(x, y, obsLine, (x2, y2), ob[0], ob[1]):
+        #     flag = True
     
     return flag
 
 def eucDistance(p1, p2):
     return sqrt((p1[0]-p2[0])*(p1[0]-p2[0]) + (p1[1]-p2[1])*(p1[1]-p2[1]))
 
-def randomChecker(p, ob):
+def distanceChecker(p, ob):
     l1 = eucDistance(p, ob[0])
     l2 = eucDistance(p, ob[1])
     L = eucDistance(ob[0], ob[1])

@@ -5,13 +5,15 @@ from pydraw import *
 from z3 import *
 from checker import *
 import pdb
+from math import atan
+import time
 
 # import pygame, sys
 # from pygame.locals import *
 
 delta_t = 0.2
-min_steer = -np.pi/3
-max_steer = np.pi/3
+min_steer = -np.pi/6
+max_steer = np.pi/6
 height = 500
 width = 500
 
@@ -34,6 +36,7 @@ class RRT():
         self.nodes = []
         self.Xinit = node(init, None)
         self.nodes.append(self.Xinit)
+        self.Xnear = node(None, None)
 
     '''
         randomConfig: this function generates a random point on the space Xfree
@@ -41,18 +44,9 @@ class RRT():
         Output: a random point on the space Xfree
     '''
     def randomConfig(self, obs):
-        while True:
-            x = random.random()*width
-            y = random.random()*height
-            theta = random.random()*2*np.pi
-            
-            tmp = False
-            for ob in obs:
-                if randomChecker((x,y), ob):
-                    tmp = True
-            # print tmp   
-            if not tmp:
-                break
+        x = random.random()*width
+        y = random.random()*height
+        theta = random.random()*2*np.pi
        
         return (x, y, theta, 0, 0)
 
@@ -62,11 +56,13 @@ class RRT():
         Output: the nearest node in RRT search tree to the point Xrand 
     '''
     def findNearest(self, Xrand):
-        if len(self.nodes) == 1:
+        if self.Xnear != self.nodes[0]:
             nn = self.nodes[0]
         else:
             nn = self.nodes[1]
         for p in self.nodes:
+            if p == self.Xnear:
+                continue
             if self.dist(p.state, Xrand) < self.dist(nn.state, Xrand):
                 nn = p
         return nn
@@ -149,6 +145,7 @@ class RRT():
             return None
 
         for i in range(K):
+            print i, 'th iteration'
             # Find Xrand
             if random.random() < p:
                 Xrand = ((goal[1]+goal[0])/2, (goal[3]+goal[2])/2, random.random()*2*np.pi, 0, 0)
@@ -156,35 +153,36 @@ class RRT():
                 Xrand = self.randomConfig(obs)
 
             # Pick Xnear
-            Xnear = self.findNearest(Xrand)
-            # print Xnear.state
-            
+            # prevXnear = self.Xnear
+            # pdb.set_trace()
+            self.Xnear = self.findNearest(Xrand)
+            print self.Xnear.state
+           
             # Calculate new state from using Xrand and Xnear
-            u = self.selectInput(Xrand, Xnear.state)
-            Xnew = node(u, Xnear)
-            p1 = (int(Xnear.state[0]), int(Xnear.state[1]))
+            u = self.selectInput(Xrand, self.Xnear.state)
+            Xnew = node(u, self.Xnear)
+            p1 = (int(self.Xnear.state[0]), int(self.Xnear.state[1]))
             p2 = (int(Xnew.state[0]), int(Xnew.state[1]))
             # Check if connecting to Xnew will collide with obstacles
             collision = collisionCheck(p1, p2, obs)
 
             # See if Xnew can be connected directly to the goal region
-            if connectChecker(Xnew.state, goal, obs) and flag != 1 and (not collision):
-                # If so, set Xnew as new state
-                print 'critic find'
-                print 'subStart', Xnew.state
-                subStart = (Xnew.state[0],Xnew.state[1], Xnew.state[2], Xnew.state[3], Xnew.state[4])
-                G_prime = RRT(subStart)
-                p = 0.7
-                subpath = G_prime.plan(K-i, goal, p, obs, 1, screen)
-                if subpath != None:
-                    print 'goal find'
-                    path = self.getPath(Xnew)
-                    return path+subpath
+            # if connectChecker(Xnew.state, goal, obs) and flag != 1 and (not collision):
+            #     # If so, set Xnew as new state
+            #     print 'critic find'
+            #     print 'subStart', Xnew.state
+            #     G_prime = RRT(Xnew.state)
+            #     p = 0.9
+            #     subpath = G_prime.plan(K-i, goal, p, obs, 1, screen)
+            #     if subpath != None:
+            #         print 'goal find'
+            #         path = self.getPath(Xnew)
+            #         return path+subpath
                 
             # If no intersections with obstacles, add Xnew to the tree and upate the graph
             if not collision:
                 self.nodes.append(Xnew)
-                Xnear.children.append(Xnew)
+                self.Xnear.children.append(Xnew)
                 drawScreen(screen, p1, p2, goal, obs)
             # Else, delete a few nodes on the branch
             else:
@@ -208,12 +206,13 @@ class RRT():
 
         x2 = s2[0]
         y2 = s2[1]
-        theta2 = s2[2]
+        theta2 = atan((y2-y1)/(x2-x1))
 
         theta_diff = abs(theta1 - theta2)
-        
+
         theta_diff = min(theta_diff, 2*np.pi - theta_diff)
-        return np.sqrt((x1-x2)*(x1-x2) + (y1-y2)*(y1-y2) + theta_diff*theta_diff)
+        # print 'dist ', (x1-x2)*(x1-x2), (y1-y2)*(y1-y2), theta_diff*theta_diff
+        return np.sqrt((x1-x2)*(x1-x2) + (y1-y2)*(y1-y2))
 
     '''
         This functions discard some nodes in self.nodes when collision happens
