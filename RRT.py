@@ -21,10 +21,11 @@ width = 500
     node class: basic element of RRT search tree
 '''
 class node():
-    def __init__(self, state, parent):
+    def __init__(self, state, parent, delta_f):
         self.state = state
         self.parent = parent
         self.children = []
+        self.input = delta_f
         
 
 '''
@@ -34,9 +35,9 @@ class RRT():
     
     def __init__(self, init):
         self.nodes = []
-        self.Xinit = node(init, None)
+        self.Xinit = node(init, None, None)
         self.nodes.append(self.Xinit)
-        self.Xnear = node(None, None)
+        self.Xnear = node(None, None, None)
 
     '''
         randomConfig: this function generates a random point on the space Xfree
@@ -94,6 +95,7 @@ class RRT():
     '''
     def selectInput(self, Xrand, Xnear):
         delta_f = min_steer
+        bestDelta = delta_f
         bestState = self.newState(Xnear, delta_f)
         bestDistance = float(self.dist(bestState, Xrand))
         
@@ -102,11 +104,12 @@ class RRT():
             Xnew = self.newState(Xnear, delta_f)
             distance = self.dist(Xnew, Xrand)
             if  distance < bestDistance:
+                bestDelta = delta_f
                 bestState = Xnew
                 bestDistance = distance
             delta_f += np.pi/60 # increment of approximately 3 degrees per iteration
         
-        return bestState
+        return bestState, bestDelta
 
     '''
         This function returns a path from Xinit to Xnew
@@ -156,11 +159,11 @@ class RRT():
             # prevXnear = self.Xnear
             # pdb.set_trace()
             self.Xnear = self.findNearest(Xrand)
-            print self.Xnear.state
+            # print self.Xnear.state
            
             # Calculate new state from using Xrand and Xnear
-            u = self.selectInput(Xrand, self.Xnear.state)
-            Xnew = node(u, self.Xnear)
+            u, delta_f = self.selectInput(Xrand, self.Xnear.state)
+            Xnew = node(u, self.Xnear, delta_f)
             p1 = (int(self.Xnear.state[0]), int(self.Xnear.state[1]))
             p2 = (int(Xnew.state[0]), int(Xnew.state[1]))
             # Check if connecting to Xnew will collide with obstacles
@@ -187,7 +190,8 @@ class RRT():
             # Else, delete a few nodes on the branch
             else:
                 print "clean"
-                self.collisionClean(Xnew)
+                delta_list, X_0 = self.collisionClean(Xnew)
+                print delta_list
             
             if goalCheck(Xnew.state, goal):
                 return self.getPath(Xnew)
@@ -221,12 +225,16 @@ class RRT():
     '''
     def collisionClean(self, Xnew):
         n = Xnew.parent
+        delta_list = []
         while True:
             if n == self.Xinit:
                 break
             if len(n.children) >= 2:
                 break
-            self.nodes.remove(n)
+            # self.nodes.remove(n)
+            delta_list.append(n.input)
             n = n.parent
 
+        delta_list.reverse()
+        return delta_list, n
 
