@@ -5,6 +5,7 @@ WINSIZE = [500, 500]
 white = (255, 240, 200)
 black = (20, 20, 40)
 red = (255, 0, 0)
+green = (0, 255, 0)
 blue = (0, 0, 255)
 
 '''
@@ -41,3 +42,12 @@ def drawPath(screen, path, goal, obs):
         p2 = (path[i+1][0], path[i+1][1])
         drawScreen(screen, p1, p2, goal, obs)
 
+def drawRec(screen, tmp):
+    X0, X1, epsilon0, epsilon1 = tmp
+    pygame.draw.rect(screen, green, (X0.state[0]-epsilon0, X0.state[1]-epsilon0, 2*epsilon0, 2*epsilon0))
+    pygame.draw.rect(screen, red, (X1.state[0]-epsilon1, X1.state[1]-epsilon1, 2*epsilon1, 2*epsilon1))
+    pygame.display.update()
+    wait = raw_input('------')
+    for e in pygame.event.get():
+	   if e.type == QUIT or (e.type == KEYUP and e.key == K_ESCAPE):
+	        sys.exit("Leaving because you requested it.")

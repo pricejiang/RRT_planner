@@ -28,15 +28,17 @@ def main():
     screen = initDraw()
 
     startTime = time.time()
-    path = G.plan(5000, goal, 0.1, obs, 1, screen)
+    ret = G.plan(5000, goal, 0.1, obs, 1, screen)
     endTime = time.time()
 
-    if path == None:
+    if ret == None:
         print 'No path find'
-    else:
+    elif ret == list:
         print 'goal reached'
-        print path
-        drawPath(screen, path, goal, obs)
+        print ret
+        drawPath(screen, ret, goal, obs)
+    else:
+        drawRec(screen, ret)
 
     print 'Used time ', endTime-startTime, ' seconds'
     

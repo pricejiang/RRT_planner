@@ -5,8 +5,9 @@ from pydraw import *
 from z3 import *
 from checker import *
 import pdb
-from math import atan
+from math import atan, ceil
 import time
+from operator import itemgetter
 
 # import pygame, sys
 # from pygame.locals import *
@@ -16,6 +17,7 @@ min_steer = -np.pi/6
 max_steer = np.pi/6
 height = 500
 width = 500
+
 
 '''
     node class: basic element of RRT search tree
@@ -82,6 +84,7 @@ class RRT():
         k4 = car_dynamic(Xn+k3, delta_f)
 
         Xnew = Xn + (k1 + 2*k2 + 2*k3 + k4)*delta_t/6
+        Xnew = [int(Xnew[0]), int(Xnew[1]), float(Xnew[2]), float(Xnew[3]), float(Xnew[4])]
         return Xnew
 
     '''
@@ -153,7 +156,6 @@ class RRT():
                 Xrand = self.randomConfig(obs)
 
             # Pick Xnear
-            # prevXnear = self.Xnear
             # pdb.set_trace()
             self.Xnear = self.findNearest(Xrand)
             print self.Xnear.state
@@ -187,7 +189,10 @@ class RRT():
             # Else, delete a few nodes on the branch
             else:
                 print "clean"
-                self.collisionClean(Xnew)
+                X_array = self.collisionClean(Xnew)
+                epsilon = 10
+                epsilon_prime = self.elimination(X_array[0], epsilon)
+                return X_array[0], X_array[1], epsilon, epsilon_prime
             
             if goalCheck(Xnew.state, goal):
                 return self.getPath(Xnew)
@@ -211,7 +216,6 @@ class RRT():
         theta_diff = abs(theta1 - theta2)
 
         theta_diff = min(theta_diff, 2*np.pi - theta_diff)
-        # print 'dist ', (x1-x2)*(x1-x2), (y1-y2)*(y1-y2), theta_diff*theta_diff
         return np.sqrt((x1-x2)*(x1-x2) + (y1-y2)*(y1-y2))
 
     '''
@@ -220,13 +224,50 @@ class RRT():
         this tree branch will be useless
     '''
     def collisionClean(self, Xnew):
-        n = Xnew.parent
+        x = Xnew.parent
+        X_array = []
         while True:
-            if n == self.Xinit:
+            if x == self.Xinit:
                 break
-            if len(n.children) >= 2:
+            X_array.append(x)
+            if len(x.children) >= 2:
                 break
-            self.nodes.remove(n)
-            n = n.parent
+            x = x.parent
+        return X_array
 
+    def elimination(self, X_0, epsilon):
+        # randomly generate 20 nodes in the region defined by B(X_0, epsilon)
+        X0_array = []
+        X1_array = []
+        for i in range(20):
+            if i == 0:
+                x = X_0.state[0]
+                y = X_0.state[1]
+            else:
+                x = random.randint(X_0.state[0]-epsilon, X_0.state[0]+epsilon)
+                y = random.randint(X_0.state[1]-epsilon, X_0.state[1]+epsilon)
+            Xn = node((x, y, X_0.state[2], X_0.state[3], X_0.state[4]), None)
+            X0_array.append(Xn)
+            output = self.tryInput(Xn.state)
+            X1_array = X1_array + output
 
+        X1_array = sorted(X1_array, key=itemgetter(1))
+        height = X1_array[-1][1] - X1_array[0][1]
+        X1_array = sorted(X1_array, key=itemgetter(0))
+        width = X1_array[-1][0] - X1_array[0][0]
+        return ceil((height+width)/2)/2
+        
+    def tryInput(self, Xn):
+        delta_f = min_steer
+        ret = []
+        # Loop delta_f from min_steer angle to max_steer 
+        while delta_f < max_steer:
+            Xnew = self.newState(Xn, delta_f)
+            delta_f += np.pi/60 # increment of approximately 3 degrees per iteration
+            ret.append(Xnew)
+        return ret
+
+if __name__ == '__main__': 
+    G = RRT([370, 200, 6.0, 0.0, 0.0])
+    X = node([370, 200, 6.0, 0.0, 0.0], None)
+    print G.elimination(X, 10)
