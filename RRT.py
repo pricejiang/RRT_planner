@@ -13,6 +13,8 @@ from operator import itemgetter
 delta_t = 0.2
 min_steer = -np.pi/6
 max_steer = np.pi/6
+width = 500
+height = 500
 
 
 '''
@@ -42,8 +44,6 @@ class RRT():
         Output: a random point on the space Xfree
     '''
     def randomConfig(self, obs):
-        width = 500
-        height = 500
         x = random.random()*width
         y = random.random()*height
         theta = random.random()*2*np.pi
@@ -82,7 +82,7 @@ class RRT():
         k4 = car_dynamic(Xn+k3, delta_f)
 
         Xnew = Xn + (k1 + 2*k2 + 2*k3 + k4)*delta_t/6
-        Xnew = [int(Xnew[0]), int(Xnew[1]), float(Xnew[2]), float(Xnew[3]), float(Xnew[4])]
+        Xnew = [float(Xnew[0]), float(Xnew[1]), float(Xnew[2]), float(Xnew[3]), float(Xnew[4])]
         return Xnew
 
     '''
@@ -187,11 +187,11 @@ class RRT():
             # Else, delete a few nodes on the branch
             else:
                 print "collide"
-                self.collisionClean(Xnew)
-                # X_array = self.collisionClean(Xnew)
-                # epsilon = 10
-                # epsilon_array = self.branchElim(X_array, epsilon)
-                # return X_array, epsilon_array
+                # self.collisionClean(Xnew)
+                X_array = self.collisionClean(Xnew)
+                epsilon = 10
+                epsilon_array = self.branchElim(X_array, epsilon)
+                return X_array, epsilon_array
             
             if goalCheck(Xnew.state, goal):
                 return self.getPath(Xnew)
@@ -228,15 +228,15 @@ class RRT():
         with obstacles. 
     '''
     def collisionClean(self, Xnew):
-        n = Xnew.parent
-        while True:
-            if n == self.Xinit:
-                break
-            if len(n.children) >= 2:
-                break
-            self.nodes.remove(n)
-            n = n.parent
-        '''
+        # n = Xnew.parent
+        # while True:
+        #     if n == self.Xinit:
+        #         break
+        #     if len(n.children) >= 2:
+        #         break
+        #     self.nodes.remove(n)
+        #     n = n.parent
+        
         x = Xnew.parent
         X_array = []
         while True:
@@ -248,7 +248,7 @@ class RRT():
             x = x.parent
         X_array.reverse()
         return X_array
-        '''
+        
 
     def branchElim(self, X_array, epsilon):
         X_0 = X_array[0]
@@ -260,8 +260,8 @@ class RRT():
                 x = X_0.state[0]
                 y = X_0.state[1]
             else:
-                x = random.randint(X_0.state[0]-epsilon, X_0.state[0]+epsilon)
-                y = random.randint(X_0.state[1]-epsilon, X_0.state[1]+epsilon)
+                x = random.randint(int(X_0.state[0])-epsilon, int(X_0.state[0])+epsilon)
+                y = random.randint(int(X_0.state[1])-epsilon, int(X_0.state[1])+epsilon)
             Xn = [x, y, X_0.state[2], X_0.state[3], X_0.state[4]]
             X0_array.append(Xn)
         
@@ -275,7 +275,6 @@ class RRT():
 
     def elimination(self, X0_array, epsilon):
         X1_array = []
-        print X0_array
         for Xn in X0_array:
             # print Xn
             output = self.tryInput(Xn)
@@ -283,11 +282,11 @@ class RRT():
             # print len(X1_array)
 
         X1_array = sorted(X1_array, key=itemgetter(1))
-        height = X1_array[-1][1] - X1_array[0][1]
+        h = X1_array[-1][1] - X1_array[0][1]
         X1_array = sorted(X1_array, key=itemgetter(0))
-        width = X1_array[-1][0] - X1_array[0][0]
+        w = X1_array[-1][0] - X1_array[0][0]
 
-        epsilon_prime = ceil((height+width)/2)/2
+        epsilon_prime = ceil((h+w)/2)/2
         return epsilon_prime, X1_array
         
     def tryInput(self, Xn):

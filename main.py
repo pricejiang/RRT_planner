@@ -18,7 +18,7 @@ def getObs(n):
     return obs
 
 def main():
-    G = RRT([370, 200, 6.0, 0.0, 0.0])
+    G = RRT([270, 200, 6.0, 0.0, 0.0])
     obs = []
     
     n = 1
@@ -33,7 +33,7 @@ def main():
 
     if ret == None:
         print 'No path find'
-    elif ret == list:
+    elif type(ret) == list:
         print 'goal reached'
         print ret
         drawPath(screen, ret, goal, obs)

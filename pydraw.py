@@ -40,17 +40,17 @@ def drawPath(screen, path, goal, obs):
         p2 = (path[i+1][0], path[i+1][1])
         drawScreen(screen, p1, p2, goal, obs)
     
-    wait = raw_input('---------- Press ENTER to continue ----------')
+    wait = raw_input('---------- PAUSED, press ENTER to continue ----------')
 
 def drawRec(screen, tmp):
     X_array, epsilon_array = tmp
     for i in range(len(X_array)):
         X0 = X_array[i]
         epsilon0 = epsilon_array[i]
-        pygame.draw.rect(screen, green, (X0.state[0]-epsilon0, X0.state[1]-epsilon0, 2*epsilon0, 2*epsilon0))
+        pygame.draw.rect(screen, (255-i*10, 255-i*10, i*10), (X0.state[0]-epsilon0, X0.state[1]-epsilon0, 2*epsilon0, 2*epsilon0))
         # pygame.draw.rect(screen, red, (X1.state[0]-epsilon1, X1.state[1]-epsilon1, 2*epsilon1, 2*epsilon1))
         pygame.display.update()
-    wait = raw_input('---------- Press ENTER to continue ----------')
+    wait = raw_input('---------- PAUSED, press ENTER to continue ----------')
     drawEnd()
 
 def drawEnd():
