@@ -28,7 +28,7 @@ def main():
     screen = initDraw()
 
     startTime = time.time()
-    path = G.plan(5000, goal, 0.1, obs, 1, screen)
+    path = G.plan(5000, goal, 0.5, obs, 1, screen)
     endTime = time.time()
 
     if path == None:

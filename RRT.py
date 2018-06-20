@@ -190,8 +190,7 @@ class RRT():
             # Else, delete a few nodes on the branch
             else:
                 print "clean"
-                delta_list, X_0 = self.collisionClean(Xnew)
-                print delta_list
+                self.collisionClean(Xnew)
             
             if goalCheck(Xnew.state, goal):
                 return self.getPath(Xnew)
@@ -225,16 +224,11 @@ class RRT():
     '''
     def collisionClean(self, Xnew):
         n = Xnew.parent
-        delta_list = []
         while True:
             if n == self.Xinit:
                 break
             if len(n.children) >= 2:
                 break
-            # self.nodes.remove(n)
-            delta_list.append(n.input)
+            self.nodes.remove(n)
             n = n.parent
-
-        delta_list.reverse()
-        return delta_list, n
 
