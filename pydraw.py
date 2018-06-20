@@ -29,9 +29,7 @@ def drawScreen(screen, p1, p2, goal, obs):
         pygame.draw.line(screen, blue, ob[0], ob[1])
     pygame.display.update()
 
-    for e in pygame.event.get():
-	   if e.type == QUIT or (e.type == KEYUP and e.key == K_ESCAPE):
-	        sys.exit("Leaving because you requested it.")
+    drawEnd()
 
 def drawPath(screen, path, goal, obs):
     screen.fill(black)
@@ -41,13 +39,21 @@ def drawPath(screen, path, goal, obs):
         p1 = (path[i][0], path[i][1])
         p2 = (path[i+1][0], path[i+1][1])
         drawScreen(screen, p1, p2, goal, obs)
+    
+    wait = raw_input('---------- Press ENTER to continue ----------')
 
 def drawRec(screen, tmp):
-    X0, X1, epsilon0, epsilon1 = tmp
-    pygame.draw.rect(screen, green, (X0.state[0]-epsilon0, X0.state[1]-epsilon0, 2*epsilon0, 2*epsilon0))
-    pygame.draw.rect(screen, red, (X1.state[0]-epsilon1, X1.state[1]-epsilon1, 2*epsilon1, 2*epsilon1))
-    pygame.display.update()
-    wait = raw_input('------')
+    X_array, epsilon_array = tmp
+    for i in range(len(X_array)):
+        X0 = X_array[i]
+        epsilon0 = epsilon_array[i]
+        pygame.draw.rect(screen, green, (X0.state[0]-epsilon0, X0.state[1]-epsilon0, 2*epsilon0, 2*epsilon0))
+        # pygame.draw.rect(screen, red, (X1.state[0]-epsilon1, X1.state[1]-epsilon1, 2*epsilon1, 2*epsilon1))
+        pygame.display.update()
+    wait = raw_input('---------- Press ENTER to continue ----------')
+    drawEnd()
+
+def drawEnd():
     for e in pygame.event.get():
 	   if e.type == QUIT or (e.type == KEYUP and e.key == K_ESCAPE):
 	        sys.exit("Leaving because you requested it.")

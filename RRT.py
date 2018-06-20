@@ -9,14 +9,10 @@ from math import atan, ceil
 import time
 from operator import itemgetter
 
-# import pygame, sys
-# from pygame.locals import *
 
 delta_t = 0.2
 min_steer = -np.pi/6
 max_steer = np.pi/6
-height = 500
-width = 500
 
 
 '''
@@ -46,6 +42,8 @@ class RRT():
         Output: a random point on the space Xfree
     '''
     def randomConfig(self, obs):
+        width = 500
+        height = 500
         x = random.random()*width
         y = random.random()*height
         theta = random.random()*2*np.pi
@@ -134,7 +132,7 @@ class RRT():
                 goal - goal region
                 p - try_goal_probability; the probability that Xgoal is picked as Xrand
                 obs - obstacle region Xobs
-                flag - a flag that indicates if a critical point Xcritic is found; found 1/not 0
+                flag - a flag that indicates if we turn on dynamic goal bias (DISCARDED)
                 screen - the pygame screen for printing the game status
 
         Output: the path from Xinit to Xgoal
@@ -188,11 +186,12 @@ class RRT():
                 drawScreen(screen, p1, p2, goal, obs)
             # Else, delete a few nodes on the branch
             else:
-                print "clean"
-                X_array = self.collisionClean(Xnew)
-                epsilon = 10
-                epsilon_prime = self.elimination(X_array[0], epsilon)
-                return X_array[0], X_array[1], epsilon, epsilon_prime
+                print "collide"
+                self.collisionClean(Xnew)
+                # X_array = self.collisionClean(Xnew)
+                # epsilon = 10
+                # epsilon_array = self.branchElim(X_array, epsilon)
+                # return X_array, epsilon_array
             
             if goalCheck(Xnew.state, goal):
                 return self.getPath(Xnew)
@@ -219,11 +218,25 @@ class RRT():
         return np.sqrt((x1-x2)*(x1-x2) + (y1-y2)*(y1-y2))
 
     '''
+        OLD: 
         This functions discard some nodes in self.nodes when collision happens
         The reason to do this is because once a collision happens, 
         this tree branch will be useless
+
+        NEW: 
+        This function returns an array contains nodes on the branch that collides 
+        with obstacles. 
     '''
     def collisionClean(self, Xnew):
+        n = Xnew.parent
+        while True:
+            if n == self.Xinit:
+                break
+            if len(n.children) >= 2:
+                break
+            self.nodes.remove(n)
+            n = n.parent
+        '''
         x = Xnew.parent
         X_array = []
         while True:
@@ -233,29 +246,49 @@ class RRT():
             if len(x.children) >= 2:
                 break
             x = x.parent
+        X_array.reverse()
         return X_array
+        '''
 
-    def elimination(self, X_0, epsilon):
-        # randomly generate 20 nodes in the region defined by B(X_0, epsilon)
+    def branchElim(self, X_array, epsilon):
+        X_0 = X_array[0]
         X0_array = []
-        X1_array = []
-        for i in range(20):
+        epsilon_array = []
+        epsilon_array.append(epsilon)
+        for i in range(40):
             if i == 0:
                 x = X_0.state[0]
                 y = X_0.state[1]
             else:
                 x = random.randint(X_0.state[0]-epsilon, X_0.state[0]+epsilon)
                 y = random.randint(X_0.state[1]-epsilon, X_0.state[1]+epsilon)
-            Xn = node((x, y, X_0.state[2], X_0.state[3], X_0.state[4]), None)
+            Xn = [x, y, X_0.state[2], X_0.state[3], X_0.state[4]]
             X0_array.append(Xn)
-            output = self.tryInput(Xn.state)
+        
+        for i in range(len(X_array)):
+            epsilon_prime, X1_array = self.elimination(X0_array[:40], epsilon)
+            epsilon_array.append(epsilon_prime)
+            X0_array = X1_array
+            random.shuffle(X0_array)
+
+        return epsilon_array
+
+    def elimination(self, X0_array, epsilon):
+        X1_array = []
+        print X0_array
+        for Xn in X0_array:
+            # print Xn
+            output = self.tryInput(Xn)
             X1_array = X1_array + output
+            # print len(X1_array)
 
         X1_array = sorted(X1_array, key=itemgetter(1))
         height = X1_array[-1][1] - X1_array[0][1]
         X1_array = sorted(X1_array, key=itemgetter(0))
         width = X1_array[-1][0] - X1_array[0][0]
-        return ceil((height+width)/2)/2
+
+        epsilon_prime = ceil((height+width)/2)/2
+        return epsilon_prime, X1_array
         
     def tryInput(self, Xn):
         delta_f = min_steer

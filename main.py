@@ -28,7 +28,7 @@ def main():
     screen = initDraw()
 
     startTime = time.time()
-    ret = G.plan(5000, goal, 0.1, obs, 1, screen)
+    ret = G.plan(5000, goal, 0.5, obs, 1, screen)
     endTime = time.time()
 
     if ret == None:
