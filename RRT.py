@@ -189,7 +189,7 @@ class RRT():
                 print "collide"
                 # self.collisionClean(Xnew)
                 X_array = self.collisionClean(Xnew)
-                epsilon = 10
+                epsilon = 5
                 epsilon_array = self.branchElim(X_array, epsilon)
                 return X_array, epsilon_array
             
@@ -251,22 +251,34 @@ class RRT():
         
 
     def branchElim(self, X_array, epsilon):
-        X_0 = X_array[0]
+        X0 = X_array[0]
         X0_array = []
         epsilon_array = []
         epsilon_array.append(epsilon)
-        for i in range(40):
+        for i in range(16):
             if i == 0:
-                x = X_0.state[0]
-                y = X_0.state[1]
+                # x = X0.state[0]
+                # y = X0.state[1]
+                x, y, theta, vy, r = X0.state
             else:
-                x = random.randint(int(X_0.state[0])-epsilon, int(X_0.state[0])+epsilon)
-                y = random.randint(int(X_0.state[1])-epsilon, int(X_0.state[1])+epsilon)
-            Xn = [x, y, X_0.state[2], X_0.state[3], X_0.state[4]]
+                x = random.randint(int(X0.state[0])-epsilon, int(X0.state[0])+epsilon)
+                y = random.randint(int(X0.state[1])-epsilon, int(X0.state[1])+epsilon)
+                theta = random.randint(int(X0.state[2])-epsilon, int(X0.state[2])+epsilon)
+                vy = random.randint(int(X0.state[3])-epsilon, int(X0.state[3])+epsilon)
+                r = random.randint(int(X0.state[4])-epsilon, int(X0.state[4])+epsilon)
+            Xn = [x, y, theta, vy, r]
             X0_array.append(Xn)
+            epsilon_prime = epsilon
         
         for i in range(len(X_array)):
-            epsilon_prime, X1_array = self.elimination(X0_array[:40], epsilon)
+            lt, rt, lb, rb = self.getExtreme(X0, epsilon_prime)
+            X0_array.append(lt)
+            X0_array.append(rt)
+            X0_array.append(lb)
+            X0_array.append(rb)
+            X0_array.reverse()
+            epsilon_prime, X1_array = self.elimination(X0_array[:20], epsilon_prime)
+            epsilon_prime = int(epsilon_prime)
             epsilon_array.append(epsilon_prime)
             X0_array = X1_array
             random.shuffle(X0_array)
@@ -298,6 +310,42 @@ class RRT():
             delta_f += np.pi/60 # increment of approximately 3 degrees per iteration
             ret.append(Xnew)
         return ret
+    
+    def getExtreme(self, X0, epsilon):
+        x, y, theta, vy, r = X0.state
+
+        x1 = x - epsilon
+        y1 = y - epsilon
+        theta1 = random.randint(int(X0.state[2])-epsilon, int(X0.state[2])+epsilon)
+        vy1 = random.randint(int(X0.state[3])-epsilon, int(X0.state[3])+epsilon)
+        r1 = random.randint(int(X0.state[4])-epsilon, int(X0.state[4])+epsilon)
+
+        lt = (x1, y1, theta1, vy1, r1)
+
+        x2 = x + epsilon
+        y2 = y - epsilon
+        theta2 = random.randint(int(X0.state[2])-epsilon, int(X0.state[2])+epsilon)
+        vy2 = random.randint(int(X0.state[3])-epsilon, int(X0.state[3])+epsilon)
+        r2 = random.randint(int(X0.state[4])-epsilon, int(X0.state[4])+epsilon)
+        
+        rt = (x2, y2, theta2, vy2, r2)
+
+        x3 = x - epsilon
+        y3 = y + epsilon
+        theta3 = random.randint(int(X0.state[2])-epsilon, int(X0.state[2])+epsilon)
+        vy3 = random.randint(int(X0.state[3])-epsilon, int(X0.state[3])+epsilon)
+        r3 = random.randint(int(X0.state[4])-epsilon, int(X0.state[4])+epsilon)
+
+        lb = (x3, y3, theta3, vy3, r3)
+
+        x4 = x + epsilon
+        y4 = y + epsilon
+        theta4 = random.randint(int(X0.state[2])-epsilon, int(X0.state[2])+epsilon)
+        vy4 = random.randint(int(X0.state[3])-epsilon, int(X0.state[3])+epsilon)
+        r4 = random.randint(int(X0.state[4])-epsilon, int(X0.state[4])+epsilon)
+
+        rb = (x4, y4, theta4, vy4, r4)
+        return lt, rt, lb, rb
 
 if __name__ == '__main__': 
     G = RRT([370, 200, 6.0, 0.0, 0.0])
