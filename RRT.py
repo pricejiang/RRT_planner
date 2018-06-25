@@ -189,7 +189,7 @@ class RRT():
                 print "collide"
                 # self.collisionClean(Xnew)
                 X_array = self.collisionClean(Xnew)
-                epsilon = 5
+                epsilon = 2
                 epsilon_array = self.branchElim(X_array, epsilon)
                 return X_array, epsilon_array
             
@@ -239,7 +239,7 @@ class RRT():
         
         x = Xnew.parent
         X_array = []
-        while True:
+        for i in range(8):
             if x == self.Xinit:
                 break
             X_array.append(x)

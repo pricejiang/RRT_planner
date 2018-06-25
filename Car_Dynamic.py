@@ -40,8 +40,8 @@ def car_dynamic(Xn, delta_f):
     # length of rear half of the car, unit: m
     Lr = 2
     # cornering stiffness coefficient
-    Cf = 500
-    Cr = 500
+    Cf = 20000
+    Cr = 20000
 
     # moment of inertia
     Iz = 6000
@@ -62,8 +62,8 @@ def car_dynamic(Xn, delta_f):
     xg_dot = vx*cosTheta - vy*sinTheta
     yg_dot = vx*sinTheta + vy*cosTheta
     theta_dot = r
-    vy_dot = A*vy + C*r + E*delta_f
-    r_dot = B*vy + D*r + F*delta_f
+    vy_dot = A*vy + B*r + E*delta_f
+    r_dot = C*vy + D*r + F*delta_f
     
     # Return dy/dt
     dydt = np.array([float(xg_dot), float(yg_dot), float(theta_dot), float(vy_dot), float(r_dot)])
