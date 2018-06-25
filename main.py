@@ -4,6 +4,10 @@ from z3 import *
 from pydraw import *
 import time
 
+'''
+    This function gives the configuration of the obstacles in the space. 
+    The obstacles are line segments defined by two endpoints. 
+'''
 def getObs(n):
     obs = []
     obs.append(((50, 0), (50, 250)))
