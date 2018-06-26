@@ -22,6 +22,7 @@ def getObs(n):
     return obs
 
 def main():
+    winsize = [500,500]
     G = RRT([270, 200, 6.0, 0.0, 0.0])
     obs = []
     
@@ -29,10 +30,10 @@ def main():
     obs = getObs(n)
     goal = (450,500,450,500)
 
-    screen = initDraw()
+    screen = initDraw(winsize)
 
     startTime = time.time()
-    ret = G.plan(5000, goal, 0.5, obs, screen)
+    ret = G.plan(5000, goal, 0.2, obs, screen, winsize)
     endTime = time.time()
 
     if ret == None:
@@ -42,7 +43,8 @@ def main():
         print ret
         drawPath(screen, ret, goal, obs)
     else:
-        drawRec(screen, ret)
+        for b in ret:
+            drawRec(screen, ret[b])
 
     print 'Used time ', endTime-startTime, ' seconds'
     

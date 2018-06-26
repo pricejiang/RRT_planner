@@ -13,8 +13,8 @@ from operator import itemgetter
 delta_t = 0.2
 min_steer = -np.pi/6
 max_steer = np.pi/6
-width = 500
-height = 500
+# width = 500
+# height = 500
 
 
 '''
@@ -43,7 +43,7 @@ class RRT():
         Input: obs - obstacle region
         Output: a random point on the space Xfree
     '''
-    def randomConfig(self, obs):
+    def randomConfig(self, obs, height, width):
         x = random.random()*width
         y = random.random()*height
         theta = random.random()*2*np.pi
@@ -138,19 +138,18 @@ class RRT():
 
         NOTE: Xcritic is set at point where it may directly connect to Xgoal
     '''
-    def plan(self, K, goal, p, obs, screen):
-        
+    def plan(self, K, goal, p, obs, screen, winsize):
         if p > 1 or p < 0:
             print "invalid p"
             return None
-
+        Box = {}
         for i in range(K):
             print i, 'th iteration'
             # Find Xrand
             if random.random() < p:
                 Xrand = ((goal[1]+goal[0])/2, (goal[3]+goal[2])/2, random.random()*2*np.pi, 0, 0)
             else:
-                Xrand = self.randomConfig(obs)
+                Xrand = self.randomConfig(obs, winsize[0], winsize[1])
 
             # Pick Xnear
             # pdb.set_trace()
@@ -175,9 +174,16 @@ class RRT():
                 print "collide"
                 # self.collisionClean(Xnew)
                 X_array = self.collisionClean(Xnew)
-                epsilon = 1
+                epsilon = 2
                 epsilon_array = self.branchElim(X_array, epsilon)
-                return X_array, epsilon_array
+                # return X_array, epsilon_array
+                if not X_array[0] in Box:
+                    Box[X_array[0]] = (X_array, epsilon_array)
+                else:
+                    Box[X_array[1]] = (X_array, epsilon_array)
+                
+                if len(Box) > 8:
+                    return Box
             
             # If reaches the goal region, find the path and return it
             if goalCheck(Xnew.state, goal):

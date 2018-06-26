@@ -1,7 +1,7 @@
 import pygame, sys
 from pygame.locals import *
+from random import randint
 
-WINSIZE = [500, 500]
 white = (255, 240, 200)
 black = (20, 20, 40)
 red = (255, 0, 0)
@@ -11,9 +11,9 @@ blue = (0, 0, 255)
 '''
     This function nitializes pygame interface
 '''
-def initDraw():
+def initDraw(winsize):
     pygame.init()
-    screen = pygame.display.set_mode(WINSIZE)
+    screen = pygame.display.set_mode(winsize)
     pygame.display.set_caption('Bicycle Model       Test        05/2018')
     
     screen.fill(black)
@@ -44,14 +44,15 @@ def drawPath(screen, path, goal, obs):
 
 def drawRec(screen, tmp):
     X_array, epsilon_array = tmp
+    color = (randint(1,255), randint(1,255), randint(1,255))
     for i in range(len(X_array)):
         X0 = X_array[i]
         epsilon0 = epsilon_array[i]
         # pygame.draw.rect(screen, (max(255-i*10,0), min(i*10, 255), max(255-i*10,0)), (X0.state[0]-epsilon0, X0.state[1]-epsilon0, 2*epsilon0, 2*epsilon0))
         # pygame.draw.rect(screen, red, (X1.state[0]-epsilon1, X1.state[1]-epsilon1, 2*epsilon1, 2*epsilon1))
         s = pygame.Surface((2*epsilon0, 2*epsilon0))
-        s.set_alpha(64)
-        s.fill(green)
+        s.set_alpha(40)
+        s.fill(color)
         screen.blit(s, (X0.state[0]-epsilon0, X0.state[1]-epsilon0))
         pygame.display.update()
 
