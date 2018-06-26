@@ -69,3 +69,41 @@ def car_dynamic(Xn, delta_f):
     dydt = np.array([float(xg_dot), float(yg_dot), float(theta_dot), float(vy_dot), float(r_dot)])
     return dydt 
 
+def TC_Simulate(Mode, initial, time_bound):
+    time_step = 0.05
+    time_bound = float(time_bound)
+    initial = [float(tmp)  for tmp in initial]
+    number_points = int(np.ceil(time_bound/time_step))
+    t = [i*time_step for i in range(0,number_points)]
+    if t[-1] != time_step:
+		t.append(time_bound)
+
+    newt = [] 
+    for step in t:
+        newt.append(float(format(step, '.2f')))
+    t = newt
+    delta = 0
+    sol = odeint(car_dynamic, initial, t, args=(delta,), hmax=time_step)
+
+    # Construct the final output
+    trace = []
+    for j in range(len(t)):
+        tmp = []
+        tmp.append(t[j])
+        tmp.append(float(sol[j, 0]))
+        tmp.append(float(sol[j, 1]))
+        tmp.append(float(sol[j, 2]))
+        tmp.append(float(sol[j, 3]))
+        tmp.append(float(sol[j, 4]))
+        trace.append(tmp)
+    return trace        
+
+if __name__ == "__main__":
+	sol = TC_Simulate('Default', [5.0, 5.0, 1, 0, 0], 10)
+        for s in sol:
+            print s
+        a = [row[1] for row in sol]
+        b = [row[2] for row in sol]
+    
+        plt.plot(a, b, '-r')
+        plt.show()
