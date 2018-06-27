@@ -21,6 +21,11 @@ def initDraw(winsize):
 
 '''
     This function updates current status of planner
+    Inputs: screen - the screen to draw on
+            p1 - endpoint of the line segment
+            p2 - the other endpoint
+            goal - goal region
+            obs - obstacle region
 '''
 def drawScreen(screen, p1, p2, goal, obs):
     pygame.draw.rect(screen, red, (goal[0],goal[2],goal[1]-goal[0],goal[3]-goal[2]))
@@ -31,6 +36,13 @@ def drawScreen(screen, p1, p2, goal, obs):
 
     drawEnd()
 
+'''
+    This functions draws the path returned by the planner
+    Inputs: screen - the screen to draw on 
+            path - the path returned by planner
+            goal - goal region
+            obs - obstacle region
+'''
 def drawPath(screen, path, goal, obs):
     screen.fill(black)
     for i in range(len(path)):
@@ -42,6 +54,11 @@ def drawPath(screen, path, goal, obs):
     
     wait = raw_input('---------- PAUSED, press ENTER to continue ----------')
 
+'''
+    This function draws the a serie of boxes defined by Xn and epsilon 
+    Inputs: screen - the screen to draw on 
+            tmp - a tuple of X_array and epsilon array
+'''
 def drawRec(screen, tmp):
     X_array, epsilon_array = tmp
     color = (randint(1,255), randint(1,255), randint(1,255))
@@ -55,14 +72,6 @@ def drawRec(screen, tmp):
         s.fill(color)
         screen.blit(s, (X0.state[0]-epsilon0, X0.state[1]-epsilon0))
         pygame.display.update()
-
-    # X0 = X_array[0]
-    # X1 = X_array[1]
-    # epsilon0 = epsilon_array[0]
-    # epsilon1 = epsilon_array[1]
-    # pygame.draw.rect(screen, green, (X0.state[0]-epsilon0, X0.state[1]-epsilon0, 2*epsilon0, 2*epsilon0))
-    # pygame.draw.rect(screen, red, (X1.state[0]-epsilon1, X1.state[1]-epsilon1, 2*epsilon1, 2*epsilon1))
-    # pygame.display.update()
 
     wait = raw_input('---------- PAUSED, press ENTER to continue ----------')
     drawEnd()

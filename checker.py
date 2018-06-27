@@ -87,27 +87,12 @@ def collisionCheck(p1, p2, obs):
     
     return flag
 
-def eucDistance(p1, p2):
-    return sqrt((p1[0]-p2[0])*(p1[0]-p2[0]) + (p1[1]-p2[1])*(p1[1]-p2[1]))
-
-def distanceChecker(p, ob):
-    l1 = eucDistance(p, ob[0])
-    l2 = eucDistance(p, ob[1])
-    L = eucDistance(ob[0], ob[1])
-
-    beta = acos((l2*l2 + L*L - l1*l1)/(2*l2*L))
-    h = sin(beta)*l2
-    return h < 10
-
 '''
     This function checks if the given point 
     can connect directly to the goal region (center of the square)
 '''
 def connectChecker(p, goal, obs):
     a = ((goal[1]+goal[0])/2, (goal[3]+goal[2])/2)
-    # b = (goal[0], goal[3])
-    # c = (goal[1], goal[2])
-    # d = (goal[1], goal[3])
     return not collisionCheck(p, a, obs)
  
 

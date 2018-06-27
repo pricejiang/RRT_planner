@@ -22,20 +22,26 @@ def getObs(n):
     return obs
 
 def main():
+    # Screen window size
     winsize = [500,500]
+    # Initialize RRT 
     G = RRT([270, 200, 6.0, 0.0, 0.0])
+
+    # Obtain obstacle and goal
     obs = []
-    
     n = 1
     obs = getObs(n)
     goal = (450,500,450,500)
 
+    # Initialize screen
     screen = initDraw(winsize)
 
+    # Call planner
     startTime = time.time()
     ret = G.plan(5000, goal, 0.2, obs, screen, winsize)
     endTime = time.time()
 
+    # Parse and draw  result
     if ret == None:
         print 'No path find'
     elif type(ret) == list:
