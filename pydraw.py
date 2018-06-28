@@ -68,9 +68,10 @@ def drawRec(screen, tmp):
         # pygame.draw.rect(screen, (max(255-i*10,0), min(i*10, 255), max(255-i*10,0)), (X0.state[0]-epsilon0, X0.state[1]-epsilon0, 2*epsilon0, 2*epsilon0))
         # pygame.draw.rect(screen, red, (X1.state[0]-epsilon1, X1.state[1]-epsilon1, 2*epsilon1, 2*epsilon1))
         s = pygame.Surface((2*epsilon0, 2*epsilon0))
-        s.set_alpha(40)
+        s.set_alpha(70)
         s.fill(color)
         screen.blit(s, (X0.state[0]-epsilon0, X0.state[1]-epsilon0))
+        print 'Box centered at ', (X0.state[0], X0.state[1]), 'with radius ', epsilon0
         pygame.display.update()
 
     wait = raw_input('---------- PAUSED, press ENTER to continue ----------')

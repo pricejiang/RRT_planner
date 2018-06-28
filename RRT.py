@@ -179,8 +179,6 @@ class RRT():
                 # return X_array, epsilon_array
                 if not X_array[0] in Box:
                     Box[X_array[0]] = (X_array, epsilon_array)
-                else:
-                    Box[X_array[1]] = (X_array, epsilon_array)
                 
                 if len(Box) > 8:
                     return Box
