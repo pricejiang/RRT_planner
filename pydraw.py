@@ -1,6 +1,7 @@
 import pygame, sys
 from pygame.locals import *
 from random import randint
+from checker import boxChecker
 
 white = (255, 240, 200)
 black = (20, 20, 40)
@@ -27,9 +28,9 @@ def initDraw(winsize):
             goal - goal region
             obs - obstacle region
 '''
-def drawScreen(screen, p1, p2, goal, obs):
+def drawScreen(screen, p1, p2, goal, obs, color):
     pygame.draw.rect(screen, red, (goal[0],goal[2],goal[1]-goal[0],goal[3]-goal[2]))
-    pygame.draw.line(screen,white,p1,p2)
+    pygame.draw.line(screen,color,p1,p2)
     for ob in obs:
         pygame.draw.line(screen, blue, ob[0], ob[1])
     pygame.display.update()
@@ -44,13 +45,13 @@ def drawScreen(screen, p1, p2, goal, obs):
             obs - obstacle region
 '''
 def drawPath(screen, path, goal, obs):
-    screen.fill(black)
+    # screen.fill(black)
     for i in range(len(path)):
         if i == len(path)-1:
             break
         p1 = (path[i][0], path[i][1])
         p2 = (path[i+1][0], path[i+1][1])
-        drawScreen(screen, p1, p2, goal, obs)
+        drawScreen(screen, p1, p2, goal, obs, white)
     
     wait = raw_input('---------- PAUSED, press ENTER to continue ----------')
 
@@ -59,9 +60,9 @@ def drawPath(screen, path, goal, obs):
     Inputs: screen - the screen to draw on 
             tmp - a tuple of X_array and epsilon array
 '''
-def drawRec(screen, tmp):
+def drawRec(screen, tmp, obs, color):
     X_array, epsilon_array = tmp
-    color = (randint(1,255), randint(1,255), randint(1,255))
+    # color = (randint(1,255), randint(1,255), randint(1,255))
     for i in range(len(X_array)):
         X0 = X_array[i]
         epsilon0 = epsilon_array[i]
@@ -72,9 +73,10 @@ def drawRec(screen, tmp):
         s.fill(color)
         screen.blit(s, (X0.state[0]-epsilon0, X0.state[1]-epsilon0))
         print 'Box centered at ', (X0.state[0], X0.state[1]), 'with radius ', epsilon0
+        # boxChecker(X0, epsilon0, obs)
         pygame.display.update()
 
-    wait = raw_input('---------- PAUSED, press ENTER to continue ----------')
+    # wait = raw_input('---------- PAUSED, press ENTER to continue ----------')
     drawEnd()
 
 def drawEnd():

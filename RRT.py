@@ -13,9 +13,10 @@ from operator import itemgetter
 delta_t = 0.2
 min_steer = -np.pi/6
 max_steer = np.pi/6
+winsize = [500, 500]
 # width = 500
 # height = 500
-
+inf = np.inf
 
 '''
     node class: basic element of RRT search tree
@@ -40,10 +41,11 @@ class RRT():
 
     '''
         randomConfig: this function generates a random point on the space Xfree
-        Input: obs - obstacle region
+        Inputs: height - height of the screen
+                width - width of the screen
         Output: a random point on the space Xfree
     '''
-    def randomConfig(self, obs, height, width):
+    def randomConfig(self, height, width):
         x = random.random()*width
         y = random.random()*height
         theta = random.random()*2*np.pi
@@ -93,20 +95,27 @@ class RRT():
                 Xnear - the nearest state in RRT search tree to Xrand
         Output: the best next state available 
     '''
-    def selectInput(self, Xrand, Xnear):
+    def selectInput(self, Xrand, Xnear, obs):
         delta_f = min_steer
-        bestState = self.newState(Xnear, delta_f)
-        bestDistance = float(self.dist(bestState, Xrand))
+        bestState = None
+        bestDistance = inf
         
         # Loop delta_f from min_steer angle to max_steer 
         while delta_f < max_steer:
             Xnew = self.newState(Xnear, delta_f)
+            # tmp = False
+            # for ob in obs:
+            #     if distanceChecker(Xnew, ob):
+            #         tmp = True
+            # if tmp == True:
+            #     delta_f += np.pi/60
+            #     continue
             distance = self.dist(Xnew, Xrand)
             if  distance < bestDistance:
                 bestState = Xnew
                 bestDistance = distance
             delta_f += np.pi/60 # increment of approximately 3 degrees per iteration
-        
+            
         return bestState
 
     '''
@@ -133,23 +142,23 @@ class RRT():
                 p - try_goal_probability; the probability that Xgoal is picked as Xrand
                 obs - obstacle region Xobs
                 screen - the pygame screen for printing the game status
-
+                winsize - size of the screen window
         Output: the path from Xinit to Xgoal
 
-        NOTE: Xcritic is set at point where it may directly connect to Xgoal
     '''
-    def plan(self, K, goal, p, obs, screen, winsize):
+    def plan(self, K, goal, p, obs, screen):
         if p > 1 or p < 0:
             print "invalid p"
             return None
         Box = {}
+        color = (randint(1,255), randint(1,255), randint(1,255))
         for i in range(K):
             print i, 'th iteration'
             # Find Xrand
             if random.random() < p:
                 Xrand = ((goal[1]+goal[0])/2, (goal[3]+goal[2])/2, random.random()*2*np.pi, 0, 0)
             else:
-                Xrand = self.randomConfig(obs, winsize[0], winsize[1])
+                Xrand = self.randomConfig(winsize[0], winsize[1])
 
             # Pick Xnear
             # pdb.set_trace()
@@ -157,7 +166,9 @@ class RRT():
             print self.Xnear.state
            
             # Calculate new state from using Xrand and Xnear
-            u = self.selectInput(Xrand, self.Xnear.state)
+            u = self.selectInput(Xrand, self.Xnear.state, obs)
+            if u == None:
+                continue
             Xnew = node(u, self.Xnear)
             p1 = (int(self.Xnear.state[0]), int(self.Xnear.state[1]))
             p2 = (int(Xnew.state[0]), int(Xnew.state[1]))
@@ -168,7 +179,8 @@ class RRT():
             if not collision:
                 self.nodes.append(Xnew)
                 self.Xnear.children.append(Xnew)
-                drawScreen(screen, p1, p2, goal, obs)
+                
+                drawScreen(screen, p1, p2, goal, obs, color)
             # Else, delete a few nodes on the branch
             else:
                 print "collide"
@@ -177,11 +189,28 @@ class RRT():
                 epsilon = 2
                 epsilon_array = self.branchElim(X_array, epsilon)
                 # return X_array, epsilon_array
-                if not X_array[0] in Box:
-                    Box[X_array[0]] = (X_array, epsilon_array)
+                drawRec(screen, (X_array, epsilon_array), obs, color)
+                Xk = X_array[-1]
+                epsilon_k = epsilon_array[-1]
+                boxCheck =  boxChecker(Xk, epsilon_k, obs, winsize)
+                cornerPoint = self.getXsubInit(boxCheck, Xk, epsilon_k)
+                # print 'epsilon array is ', epsilon_array
+                # print 'Xk is ', Xk.state, '; ep is ', epsilon_k
+                # print 'start is ', cornerPoint
+                theta_prime = Xk.state[2]+np.pi
+                XsubInit = [int(cornerPoint[0]), int(cornerPoint[1]), random.uniform(theta_prime-1, theta_prime+1), random.randint(int(Xk.state[3]-epsilon),int(Xk.state[3]+epsilon)), random.randint(int(Xk.state[4]-epsilon),int(Xk.state[4]+epsilon))]
+                subG = RRT(XsubInit)
+                subpath = subG.plan(5000-i, goal, p, obs, screen)
+                Xc = self.findNearest(XsubInit)
+                # subG = RRT(Xc.state)
+                # pdb.set_trace()
+                # innerpath = subG.plan(5000-i, (XsubInit[0]-epsilon,XsubInit[0]+epsilon,XsubInit[1]-epsilon,XsubInit[1]+epsilon), 0.8, obs, screen)
+                return self.getPath(Xc) + subpath
+                # if not X_array[0] in Box:
+                #     Box[X_array[0]] = (X_array, epsilon_array)
                 
-                if len(Box) > 8:
-                    return Box
+                # if len(Box) > 0:
+                #     return Box
             
             # If reaches the goal region, find the path and return it
             if goalCheck(Xnew.state, goal):
@@ -198,15 +227,9 @@ class RRT():
     def dist(self, s1, s2):
         x1 = s1[0]
         y1 = s1[1]
-        theta1 = s1[2]
 
         x2 = s2[0]
         y2 = s2[1]
-        theta2 = atan((y2-y1)/(x2-x1))
-
-        theta_diff = abs(theta1 - theta2)
-
-        theta_diff = min(theta_diff, 2*np.pi - theta_diff)
         return np.sqrt((x1-x2)*(x1-x2) + (y1-y2)*(y1-y2))
 
     '''
@@ -234,12 +257,12 @@ class RRT():
         
         x = Xnew.parent
         X_array = []
-        for i in range(8):
+        for i in range(5):
             if x == self.Xinit:
                 break
             X_array.append(x)
-            if len(x.children) >= 2:
-                break
+            # if len(x.children) >= 2:
+            #     break
             x = x.parent
         X_array.reverse()
         return X_array
@@ -265,7 +288,15 @@ class RRT():
             # Random configuration on 5 dimensions
             else:
                 x = random.randint(int(X0.state[0])-epsilon, int(X0.state[0])+epsilon)
+                if x > winsize[0]:
+                    x = winsize[0]
+                if x < 0:
+                    x = 0
                 y = random.randint(int(X0.state[1])-epsilon, int(X0.state[1])+epsilon)
+                if y > winsize[1]:
+                    y = winsize[1]
+                if y < 0:
+                    y = 0
                 theta = random.randint(int(X0.state[2])-epsilon, int(X0.state[2])+epsilon)
                 vy = random.randint(int(X0.state[3])-epsilon, int(X0.state[3])+epsilon)
                 r = random.randint(int(X0.state[4])-epsilon, int(X0.state[4])+epsilon)
@@ -292,7 +323,7 @@ class RRT():
             random.shuffle(X0_array)
             Xt = X0_array[i]
             Xc = node(Xt, None)
-
+        epsilon_array.pop(-1)
         return epsilon_array
 
     '''
@@ -385,6 +416,28 @@ class RRT():
 
         rb = (x4, y4, theta4, vy4, r4)
         return lt, rt, lb, rb
+
+    def getXsubInit(self, boxCheck, Xk, epsilon_k):
+        xg = Xk.state[0]
+        yg = Xk.state[1]
+        r = epsilon_k
+        # Four corner points coordinate
+        lt = (xg-r, yg-r)
+        rt = (xg+r, yg-r)
+        lb = (xg-r, yg+r)
+        rb = (xg+r, yg+r)
+        ret = []
+        if not boxCheck[0]:
+            ret.append(lt)
+        if not boxCheck[1]:
+            ret.append(rt)
+        if not boxCheck[2]:
+            ret.append(lb)
+        if not boxCheck[3]:
+            ret.append(rb)
+        
+        random.shuffle(ret)
+        return ret[0]
 
 if __name__ == '__main__': 
     G = RRT([370, 200, 6.0, 0.0, 0.0])

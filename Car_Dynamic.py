@@ -99,7 +99,7 @@ def TC_Simulate(Mode, initial, time_bound):
     return trace        
 
 if __name__ == "__main__":
-	sol = TC_Simulate('Default', [5.0, 5.0, 1, 0, 0], 10)
+	sol = TC_Simulate('Default', [5.0, 5.0, 0, 10, 0], 20)
         for s in sol:
             print s
         a = [row[1] for row in sol]
