@@ -187,22 +187,27 @@ class RRT():
             # Else, delete a few nodes on the branch
             elif flag == 1:
                 print "collide"
-                # self.collisionClean(Xnew)
+                # Obtain X_array and epsilon_array
                 X_array = self.collisionClean(Xnew)
                 epsilon = 2
                 epsilon_array = self.branchElim(X_array, epsilon)
-
+                # Draw the reachtube boxes
                 drawRec(screen, (X_array, epsilon_array), obs, color)
+                # Perform a few checks to get the corner point for subtree initiation
                 Xk = X_array[-1]
                 epsilon_k = epsilon_array[-1]
                 boxCheck =  boxChecker(Xk, epsilon_k, obs, winsize)
                 cornerPoint = self.getXsubInit(boxCheck, Xk, epsilon_k)
-
+                # Determine the angle to start 
+                # If the point can be directly connected to goal, set theta directly to the goal
                 if connectChecker(cornerPoint, goal, obs):
                     gc = ((goal[1]+goal[0])/2, (goal[3]+goal[2])/2)
                     theta_prime = atan((gc[1]-cornerPoint[1])/(gc[0]-cornerPoint[0]))
+                # Otherwise, randomly select theta to be any direction opposite to the collision
                 else:
                     theta_prime = Xk.state[2]+np.pi
+                
+                # Grow the subtree with XsubInit
                 XsubInit = [int(cornerPoint[0]), int(cornerPoint[1]), random.uniform(theta_prime-1, theta_prime+1), random.randint(int(Xk.state[3]-epsilon),int(Xk.state[3]+epsilon)), random.randint(int(Xk.state[4]-epsilon),int(Xk.state[4]+epsilon))]
                 subG = RRT(XsubInit)
                 subpath = subG.plan(5000-i, goal, p, obs, screen, flag)
