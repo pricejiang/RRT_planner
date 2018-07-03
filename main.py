@@ -4,39 +4,64 @@ from z3 import *
 from pydraw import *
 import time
 
+'''
+    This function gives the configuration of the obstacles in the space. 
+    The obstacles are line segments defined by two endpoints. 
+'''
 def getObs(n):
+    print n
     obs = []
-    obs.append(((50, 0), (50, 250)))
-    obs.append(((100, 250), (100, 500)))
-    obs.append(((150, 0), (150, 250)))
-    obs.append(((200, 250), (200, 500)))
-    obs.append(((250, 0), (250, 250)))
-    obs.append(((300, 250), (300, 500)))
-    obs.append(((350, 0), (350, 250)))
-    obs.append(((400, 250), (400, 500)))
-    obs.append(((450, 0), (450, 250)))
+    if n == 1:
+        obs.append(((50, 0), (50, 250)))
+        obs.append(((100, 250), (100, 500)))
+        obs.append(((150, 0), (150, 250)))
+        obs.append(((200, 250), (200, 500)))
+        obs.append(((250, 0), (250, 250)))
+        obs.append(((300, 250), (300, 500)))
+        obs.append(((350, 0), (350, 250)))
+        obs.append(((400, 250), (400, 500)))
+        obs.append(((450, 0), (450, 250)))
+        obs.append(((0, 0), (0, 500)))
+        obs.append(((0, 0), (500, 0)))
+        obs.append(((0, 500), (500, 500)))
+        obs.append(((500, 0), (500, 500)))
+    elif n == 2:
+        obs.append(((0, 150), (200, 150)))
+        obs.append(((300, 250), (500, 250)))
+        obs.append(((0, 350), (200, 350)))
+        obs.append(((0, 0), (0, 500)))
+        obs.append(((0, 0), (500, 0)))
+        obs.append(((0, 500), (500, 500)))
+        obs.append(((500, 0), (500, 500)))
     return obs
 
 def main():
-    G = RRT([370, 200, 6.0, 0.0, 0.0])
+    # Screen window size
+    winsize = [500,500]
+    # Initialize RRT 
+    G = RRT([350, 180, 2, 0.0, 0.0])
+
+    # Obtain obstacle and goal
     obs = []
-    
-    n = 1
-    obs = getObs(n)
+    # n = raw_input('Please select obstacle scenario, 1 or 2\n')
+    n = 2
+    obs = getObs(int(n))
     goal = (450,500,450,500)
+    # Initialize screen
+    screen = initDraw(winsize)
 
-    screen = initDraw()
-
+    # Call planner
     startTime = time.time()
-    path = G.plan(5000, goal, 0.1, obs, 1, screen)
+    ret = G.plan(5000, goal, 0.3, obs, screen, 0)
     endTime = time.time()
 
-    if path == None:
+    # Parse and draw result
+    if ret == None:
         print 'No path find'
-    else:
+    elif type(ret) == list:
         print 'goal reached'
-        print path
-        drawPath(screen, path, goal, obs)
+        print ret
+        drawPath(screen, ret, goal, obs)
 
     print 'Used time ', endTime-startTime, ' seconds'
     

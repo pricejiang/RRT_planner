@@ -40,8 +40,8 @@ def car_dynamic(Xn, delta_f):
     # length of rear half of the car, unit: m
     Lr = 2
     # cornering stiffness coefficient
-    Cf = 500
-    Cr = 500
+    Cf = 20000
+    Cr = 20000
 
     # moment of inertia
     Iz = 6000
@@ -62,10 +62,52 @@ def car_dynamic(Xn, delta_f):
     xg_dot = vx*cosTheta - vy*sinTheta
     yg_dot = vx*sinTheta + vy*cosTheta
     theta_dot = r
-    vy_dot = A*vy + C*r + E*delta_f
-    r_dot = B*vy + D*r + F*delta_f
+    vy_dot = A*vy + B*r + E*delta_f
+    r_dot = C*vy + D*r + F*delta_f
     
     # Return dy/dt
     dydt = np.array([float(xg_dot), float(yg_dot), float(theta_dot), float(vy_dot), float(r_dot)])
     return dydt 
 
+'''
+    This simulator is for test only 
+    NOTE: need to add 't' argument in the above car_dynamic function to perform test
+'''
+def TC_Simulate(Mode, initial, time_bound):
+    time_step = 0.05
+    time_bound = float(time_bound)
+    initial = [float(tmp)  for tmp in initial]
+    number_points = int(np.ceil(time_bound/time_step))
+    t = [i*time_step for i in range(0,number_points)]
+    if t[-1] != time_step:
+		t.append(time_bound)
+
+    newt = [] 
+    for step in t:
+        newt.append(float(format(step, '.2f')))
+    t = newt
+    delta = 0
+    sol = odeint(car_dynamic, initial, t, args=(delta,), hmax=time_step)
+
+    # Construct the final output
+    trace = []
+    for j in range(len(t)):
+        tmp = []
+        tmp.append(t[j])
+        tmp.append(float(sol[j, 0]))
+        tmp.append(float(sol[j, 1]))
+        tmp.append(float(sol[j, 2]))
+        tmp.append(float(sol[j, 3]))
+        tmp.append(float(sol[j, 4]))
+        trace.append(tmp)
+    return trace        
+
+if __name__ == "__main__":
+	sol = TC_Simulate('Default', [5.0, 5.0, 0, 10, 0], 20)
+        for s in sol:
+            print s
+        a = [row[1] for row in sol]
+        b = [row[2] for row in sol]
+    
+        plt.plot(a, b, '-r')
+        plt.show()

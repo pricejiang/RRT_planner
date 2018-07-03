@@ -30,7 +30,7 @@ def goalCheck(Xnew, goal):
         return False
 
 '''
-    This functions checks if rrtLine intersects with a single obsLine
+    This functions checks if a line intersects with a single obsLine
     Return: True if intersects
             False if not 
 '''
@@ -51,7 +51,7 @@ def obsCheck(x, y, rrtLine, obsLine, p1, p2, ob1, ob2):
     else:
         s.add(And(y>=p2[1], y<=p1[1]))
     
-    s.add(And(x>=ob1[0], x<=ob1[0]))
+    s.add(And(x>=ob1[0], x<=ob2[0]))
     s.add(And(y>=ob1[1], y<=ob2[1]))
 
     # Check result
@@ -80,37 +80,67 @@ def collisionCheck(p1, p2, obs):
     # Iterates to see if rrtLine intersects with any obstacles 
     for ob in obs:
         obsLine = getEqn(x, y, ob[0], ob[1])
+        # print obsLine
         if obsCheck(x, y, rrtLine, obsLine, (x1,y1), (x2, y2), ob[0], ob[1]) == True:
             flag = True
         # if distanceChecker(x, y, obsLine, (x2, y2), ob[0], ob[1]):
         #     flag = True
-    
     return flag
 
-def eucDistance(p1, p2):
-    return sqrt((p1[0]-p2[0])*(p1[0]-p2[0]) + (p1[1]-p2[1])*(p1[1]-p2[1]))
+def boxChecker(Xk, epsilon_k, obs, winsize):
+    xg = Xk.state[0]
+    yg = Xk.state[1]
+    r = epsilon_k
+    # Four corner points coordinate
+    lt = (xg-r, yg-r)
+    rt = (xg+r, yg-r)
+    lb = (xg-r, yg+r)
+    rb = (xg+r, yg+r)
 
-def distanceChecker(p, ob):
-    l1 = eucDistance(p, ob[0])
-    l2 = eucDistance(p, ob[1])
-    L = eucDistance(ob[0], ob[1])
+    x = Real('x')
+    y = Real('y')
+    a,b,c,d = False, False, False, False
+    ltLine = getEqn(x, y, (xg, yg), lt)
+    rtLine = getEqn(x, y, (xg, yg), rt)
+    lbLine = getEqn(x, y, (xg, yg), lb)
+    rbLine = getEqn(x, y, (xg, yg), rb)
+    for ob in obs:
+        obsLine = getEqn(x, y, ob[0], ob[1])
+        if obsCheck(x, y, ltLine, obsLine, (xg, yg), lt, ob[0], ob[1]):
+            a = True
+        if obsCheck(x, y, rtLine, obsLine, (xg, yg), rt, ob[0], ob[1]):
+            b = True
+        if obsCheck(x, y, lbLine, obsLine, (xg, yg), lb, ob[0], ob[1]):
+            c = True
+        if obsCheck(x, y, rbLine, obsLine, (xg, yg), rb, ob[0], ob[1]):
+            d = True
+    
+    # print 'lt is  ',a
+    # print 'rt is  ',b
+    # print 'lb is  ',c
+    # print 'rb is  ',d
+    return a,b,c,d
 
-    beta = acos((l2*l2 + L*L - l1*l1)/(2*l2*L))
-    h = sin(beta)*l2
-    return h < 10
+# def eucDistance(p1, p2):
+#     return sqrt((p1[0]-p2[0])*(p1[0]-p2[0]) + (p1[1]-p2[1])*(p1[1]-p2[1]))
+
+# def distanceChecker(p, ob):
+#     l1 = eucDistance(p, ob[0])
+#     l2 = eucDistance(p, ob[1])
+#     L = eucDistance(ob[0], ob[1])
+
+#     beta = acos((l2*l2 + L*L - l1*l1)/(2*l2*L))
+#     h = sin(beta)*l2
+#     return h < 5
 
 '''
-    This function checks if the given point 
-    can connect directly to the goal region (center of the square)
+    This function checks whether the given point p 
+    can be conncected to the goal directly
 '''
 def connectChecker(p, goal, obs):
     a = ((goal[1]+goal[0])/2, (goal[3]+goal[2])/2)
-    # b = (goal[0], goal[3])
-    # c = (goal[1], goal[2])
-    # d = (goal[1], goal[3])
-    return not collisionCheck(p, a, obs)
- 
 
+    return not collisionCheck(p, a, obs)
 
 if __name__ == '__main__':
     # print randomChecker((1,0), ((16,-1), (16,3)))
@@ -125,4 +155,3 @@ if __name__ == '__main__':
     # obs.append(((350, 0), (350, 250)))
     obs.append(((400, 250), (400, 500)))
     # obs.append(((450, 0), (450, 250)))
-    print connectChecker((420, 200), (450,500,450,500), obs)

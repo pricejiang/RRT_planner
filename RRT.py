@@ -5,17 +5,18 @@ from pydraw import *
 from z3 import *
 from checker import *
 import pdb
-from math import atan
+from math import atan, ceil
 import time
+from operator import itemgetter
 
-# import pygame, sys
-# from pygame.locals import *
 
 delta_t = 0.2
 min_steer = -np.pi/6
 max_steer = np.pi/6
-height = 500
-width = 500
+winsize = [500, 500]
+# width = 500
+# height = 500
+inf = np.inf
 
 '''
     node class: basic element of RRT search tree
@@ -40,10 +41,11 @@ class RRT():
 
     '''
         randomConfig: this function generates a random point on the space Xfree
-        Input: obs - obstacle region
+        Inputs: height - height of the screen
+                width - width of the screen
         Output: a random point on the space Xfree
     '''
-    def randomConfig(self, obs):
+    def randomConfig(self, height, width):
         x = random.random()*width
         y = random.random()*height
         theta = random.random()*2*np.pi
@@ -82,6 +84,7 @@ class RRT():
         k4 = car_dynamic(Xn+k3, delta_f)
 
         Xnew = Xn + (k1 + 2*k2 + 2*k3 + k4)*delta_t/6
+        Xnew = [float(Xnew[0]), float(Xnew[1]), float(Xnew[2]), float(Xnew[3]), float(Xnew[4])]
         return Xnew
 
     '''
@@ -92,20 +95,27 @@ class RRT():
                 Xnear - the nearest state in RRT search tree to Xrand
         Output: the best next state available 
     '''
-    def selectInput(self, Xrand, Xnear):
+    def selectInput(self, Xrand, Xnear, obs):
         delta_f = min_steer
-        bestState = self.newState(Xnear, delta_f)
-        bestDistance = float(self.dist(bestState, Xrand))
+        bestState = None
+        bestDistance = inf
         
         # Loop delta_f from min_steer angle to max_steer 
         while delta_f < max_steer:
             Xnew = self.newState(Xnear, delta_f)
+            # tmp = False
+            # for ob in obs:
+            #     if distanceChecker(Xnew, ob):
+            #         tmp = True
+            # if tmp == True:
+            #     delta_f += np.pi/60
+            #     continue
             distance = self.dist(Xnew, Xrand)
             if  distance < bestDistance:
                 bestState = Xnew
                 bestDistance = distance
             delta_f += np.pi/60 # increment of approximately 3 degrees per iteration
-        
+            
         return bestState
 
     '''
@@ -131,64 +141,77 @@ class RRT():
                 goal - goal region
                 p - try_goal_probability; the probability that Xgoal is picked as Xrand
                 obs - obstacle region Xobs
-                flag - a flag that indicates if a critical point Xcritic is found; found 1/not 0
                 screen - the pygame screen for printing the game status
-
+                winsize - size of the screen window
         Output: the path from Xinit to Xgoal
 
-        NOTE: Xcritic is set at point where it may directly connect to Xgoal
     '''
-    def plan(self, K, goal, p, obs, flag, screen):
-        
+    def plan(self, K, goal, p, obs, screen, flag):
         if p > 1 or p < 0:
             print "invalid p"
             return None
-
+        Box = {}
+        color = (randint(1,255), randint(1,255), randint(1,255))
         for i in range(K):
             print i, 'th iteration'
+            print flag
             # Find Xrand
             if random.random() < p:
                 Xrand = ((goal[1]+goal[0])/2, (goal[3]+goal[2])/2, random.random()*2*np.pi, 0, 0)
             else:
-                Xrand = self.randomConfig(obs)
+                Xrand = self.randomConfig(winsize[0], winsize[1])
 
             # Pick Xnear
-            # prevXnear = self.Xnear
             # pdb.set_trace()
             self.Xnear = self.findNearest(Xrand)
             print self.Xnear.state
-           
+            if flag == 1 and connectChecker(self.Xnear.state, goal, obs):
+                flag = 0
             # Calculate new state from using Xrand and Xnear
-            u = self.selectInput(Xrand, self.Xnear.state)
+            u = self.selectInput(Xrand, self.Xnear.state, obs)
+            if u == None:
+                continue
             Xnew = node(u, self.Xnear)
             p1 = (int(self.Xnear.state[0]), int(self.Xnear.state[1]))
             p2 = (int(Xnew.state[0]), int(Xnew.state[1]))
             # Check if connecting to Xnew will collide with obstacles
             collision = collisionCheck(p1, p2, obs)
-
-            # See if Xnew can be connected directly to the goal region
-            # if connectChecker(Xnew.state, goal, obs) and flag != 1 and (not collision):
-            #     # If so, set Xnew as new state
-            #     print 'critic find'
-            #     print 'subStart', Xnew.state
-            #     G_prime = RRT(Xnew.state)
-            #     p = 0.9
-            #     subpath = G_prime.plan(K-i, goal, p, obs, 1, screen)
-            #     if subpath != None:
-            #         print 'goal find'
-            #         path = self.getPath(Xnew)
-            #         return path+subpath
+            
                 
             # If no intersections with obstacles, add Xnew to the tree and upate the graph
             if not collision:
                 self.nodes.append(Xnew)
                 self.Xnear.children.append(Xnew)
-                drawScreen(screen, p1, p2, goal, obs)
+                
+                drawScreen(screen, p1, p2, goal, obs, color)
             # Else, delete a few nodes on the branch
-            else:
-                print "clean"
-                self.collisionClean(Xnew)
+            elif flag == 1:
+                print "collide"
+                # self.collisionClean(Xnew)
+                X_array = self.collisionClean(Xnew)
+                epsilon = 2
+                epsilon_array = self.branchElim(X_array, epsilon)
+
+                drawRec(screen, (X_array, epsilon_array), obs, color)
+                Xk = X_array[-1]
+                epsilon_k = epsilon_array[-1]
+                boxCheck =  boxChecker(Xk, epsilon_k, obs, winsize)
+                cornerPoint = self.getXsubInit(boxCheck, Xk, epsilon_k)
+
+                if connectChecker(cornerPoint, goal, obs):
+                    gc = ((goal[1]+goal[0])/2, (goal[3]+goal[2])/2)
+                    theta_prime = atan((gc[1]-cornerPoint[1])/(gc[0]-cornerPoint[0]))
+                else:
+                    theta_prime = Xk.state[2]+np.pi
+                XsubInit = [int(cornerPoint[0]), int(cornerPoint[1]), random.uniform(theta_prime-1, theta_prime+1), random.randint(int(Xk.state[3]-epsilon),int(Xk.state[3]+epsilon)), random.randint(int(Xk.state[4]-epsilon),int(Xk.state[4]+epsilon))]
+                subG = RRT(XsubInit)
+                subpath = subG.plan(5000-i, goal, p, obs, screen, flag)
+                Xc = self.findNearest(XsubInit)
+
+                return self.getPath(Xc) + subpath
+
             
+            # If reaches the goal region, find the path and return it
             if goalCheck(Xnew.state, goal):
                 return self.getPath(Xnew)
         
@@ -198,35 +221,228 @@ class RRT():
     # Helper Functions
     '''
         This function returns the distance between two given states
+        It uses Euclidean distance
     '''
     def dist(self, s1, s2):
         x1 = s1[0]
         y1 = s1[1]
-        theta1 = s1[2]
 
         x2 = s2[0]
         y2 = s2[1]
-        theta2 = atan((y2-y1)/(x2-x1))
-
-        theta_diff = abs(theta1 - theta2)
-
-        theta_diff = min(theta_diff, 2*np.pi - theta_diff)
-        # print 'dist ', (x1-x2)*(x1-x2), (y1-y2)*(y1-y2), theta_diff*theta_diff
         return np.sqrt((x1-x2)*(x1-x2) + (y1-y2)*(y1-y2))
 
     '''
+        OLD: 
         This functions discard some nodes in self.nodes when collision happens
         The reason to do this is because once a collision happens, 
         this tree branch will be useless
+
+        NEW: 
+        This function returns a list of nodes on the branch that collides 
+        with obstacles. 
+
+        Inputs: Xnew - the point where collision happens
+        Output: A list of nodes on the collision branch
     '''
     def collisionClean(self, Xnew):
-        n = Xnew.parent
-        while True:
-            if n == self.Xinit:
+        # n = Xnew.parent
+        # while True:
+        #     if n == self.Xinit:
+        #         break
+        #     if len(n.children) >= 2:
+        #         break
+        #     self.nodes.remove(n)
+        #     n = n.parent
+        
+        x = Xnew.parent
+        X_array = []
+        for i in range(5):
+            if x == self.Xinit:
                 break
-            if len(n.children) >= 2:
-                break
-            self.nodes.remove(n)
-            n = n.parent
+            X_array.append(x)
+            # if len(x.children) >= 2:
+            #     break
+            x = x.parent
+        X_array.reverse()
+        return X_array
+        
+    '''
+        This function finds a series of boxes with size epsilon
+        centered by nodes on a collision branch. 
 
+        Inputs: X_array - a list of nodes on the collsion branch
+                epsilon - the radius of the initial box
+        Output: epsilon_array - the radius of all boxes 
+    '''
+    def branchElim(self, X_array, epsilon):
+        X0 = X_array[0]
+        X0_array = []
+        epsilon_array = []
+        epsilon_array.append(epsilon)
+        # Randomly choosing 16 points in the box B0 defined by B(X0, epsilon)
+        for i in range(16):
+            # The first point is X0
+            if i == 0:
+                x, y, theta, vy, r = X0.state
+            # Random configuration on 5 dimensions
+            else:
+                x = random.randint(int(X0.state[0])-epsilon, int(X0.state[0])+epsilon)
+                if x > winsize[0]:
+                    x = winsize[0]
+                if x < 0:
+                    x = 0
+                y = random.randint(int(X0.state[1])-epsilon, int(X0.state[1])+epsilon)
+                if y > winsize[1]:
+                    y = winsize[1]
+                if y < 0:
+                    y = 0
+                theta = random.randint(int(X0.state[2])-epsilon, int(X0.state[2])+epsilon)
+                vy = random.randint(int(X0.state[3])-epsilon, int(X0.state[3])+epsilon)
+                r = random.randint(int(X0.state[4])-epsilon, int(X0.state[4])+epsilon)
+            Xn = [x, y, theta, vy, r]
+            X0_array.append(Xn)
+        epsilon_prime = epsilon
+        Xc = X0
+        # For all nodes in the X_array list
+        for i in range(len(X_array)):
+            # First, get all 4 extreme points of box
+            lt, rt, lb, rb = self.getExtreme(Xc, epsilon_prime)
+            X0_array.append(lt)
+            X0_array.append(rt)
+            X0_array.append(lb)
+            X0_array.append(rb)
+            X0_array.reverse()
+            # Then, get new epsilon' and X1_array with nodes in the new box 
+            # generated by random 20 nodes in current box with all possible inputs
+            epsilon_prime, X1_array = self.pi_transition(X0_array[:20], epsilon_prime)
+            epsilon_prime = int(epsilon_prime)
+            epsilon_array.append(epsilon_prime)
+            X0_array = X1_array
+            # Shuffle the list
+            random.shuffle(X0_array)
+            Xt = X0_array[i]
+            Xc = node(Xt, None)
+        epsilon_array.pop(-1)
+        return epsilon_array
 
+    '''
+        This function calculates the Bn+1 with Bn box defined by (Xn, epsilon)
+        where Xn is a list of nodes, and epsilon is the radius of Bn
+
+        Inputs: X0_array - a list of the nodes in the box Bn
+                epsilon - the radius of the box Bn
+        Output: epsilon_prime - the radius of the box Bn+1
+                X1_array - a list of the nodes in the box Bn+1
+    '''
+    def pi_transition(self, X0_array, epsilon):
+        X1_array = []
+        for Xn in X0_array:
+            # Try out all the possible input at a given node Xn
+            # the output will form a box 
+            output = self.tryInput(Xn)
+            X1_array = X1_array + output
+
+        X1_array = sorted(X1_array, key=itemgetter(1))
+        h = X1_array[-1][1] - X1_array[0][1] # Get the height of the box
+        X1_array = sorted(X1_array, key=itemgetter(0))
+        w = X1_array[-1][0] - X1_array[0][0] # Get the width of the box
+
+        epsilon_prime = ceil((h+w)/2)/2 # Obtain epsilon_prime by average height and width
+        return epsilon_prime, X1_array
+    
+    '''
+        This function tries out all possible inputs at a given node Xn to 
+        calculate all possible outputs
+
+        Inputs: Xn - the state xg, yg, theta, vy, r of the Xn node
+        Output: ret - all possible outcomes of Xn with all possible inputs u
+    '''
+    def tryInput(self, Xn):
+        delta_f = min_steer
+        ret = []
+        # Loop delta_f from min_steer angle to max_steer 
+        while delta_f < max_steer:
+            Xnew = self.newState(Xn, delta_f)
+            delta_f += np.pi/60 # increment of approximately 3 degrees per iteration
+            ret.append(Xnew)
+        return ret
+    
+    '''
+        This function gets the all 4 corner extreme points of box Bn defined by B(X0, epsilon)
+        Inputs: X0 - a node in the space; center of Bn
+                epsilon - radius of Bn
+        Output: lt - left-top point
+                rt - right-top point
+                lb - left-bottom point
+                rb - right-bottom point
+    '''
+    def getExtreme(self, X0, epsilon):
+        x, y, theta, vy, r = X0.state
+
+        # Calculate lt
+        x1 = x - epsilon
+        y1 = y - epsilon
+        theta1 = random.randint(int(X0.state[2])-epsilon, int(X0.state[2])+epsilon)
+        vy1 = random.randint(int(X0.state[3])-epsilon, int(X0.state[3])+epsilon)
+        r1 = random.randint(int(X0.state[4])-epsilon, int(X0.state[4])+epsilon)
+
+        lt = (x1, y1, theta1, vy1, r1)
+
+        # Calculate rt
+        x2 = x + epsilon
+        y2 = y - epsilon
+        theta2 = random.randint(int(X0.state[2])-epsilon, int(X0.state[2])+epsilon)
+        vy2 = random.randint(int(X0.state[3])-epsilon, int(X0.state[3])+epsilon)
+        r2 = random.randint(int(X0.state[4])-epsilon, int(X0.state[4])+epsilon)
+        
+        rt = (x2, y2, theta2, vy2, r2)
+
+        # Calculate lb
+        x3 = x - epsilon
+        y3 = y + epsilon
+        theta3 = random.randint(int(X0.state[2])-epsilon, int(X0.state[2])+epsilon)
+        vy3 = random.randint(int(X0.state[3])-epsilon, int(X0.state[3])+epsilon)
+        r3 = random.randint(int(X0.state[4])-epsilon, int(X0.state[4])+epsilon)
+
+        lb = (x3, y3, theta3, vy3, r3)
+
+        # Calculate rb
+        x4 = x + epsilon
+        y4 = y + epsilon
+        theta4 = random.randint(int(X0.state[2])-epsilon, int(X0.state[2])+epsilon)
+        vy4 = random.randint(int(X0.state[3])-epsilon, int(X0.state[3])+epsilon)
+        r4 = random.randint(int(X0.state[4])-epsilon, int(X0.state[4])+epsilon)
+
+        rb = (x4, y4, theta4, vy4, r4)
+        return lt, rt, lb, rb
+    
+    '''
+        This function returns a corner of the outer most box as the subtree initial node
+    '''
+    def getXsubInit(self, boxCheck, Xk, epsilon_k):
+        xg = Xk.state[0]
+        yg = Xk.state[1]
+        r = epsilon_k
+        # Four corner points coordinate
+        lt = (xg-r, yg-r)
+        rt = (xg+r, yg-r)
+        lb = (xg-r, yg+r)
+        rb = (xg+r, yg+r)
+        # Randomly select a corner 
+        ret = []
+        if not boxCheck[0]:
+            ret.append(lt)
+        if not boxCheck[1]:
+            ret.append(rt)
+        if not boxCheck[2]:
+            ret.append(lb)
+        if not boxCheck[3]:
+            ret.append(rb)
+        
+        random.shuffle(ret)
+        return ret[0]
+
+if __name__ == '__main__': 
+    G = RRT([370, 200, 6.0, 0.0, 0.0])
+    X = node([370, 200, 6.0, 0.0, 0.0], None)
+    print G.pi_transition(X, 10)
