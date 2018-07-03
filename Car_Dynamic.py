@@ -69,6 +69,10 @@ def car_dynamic(Xn, delta_f):
     dydt = np.array([float(xg_dot), float(yg_dot), float(theta_dot), float(vy_dot), float(r_dot)])
     return dydt 
 
+'''
+    This simulator is for test only 
+    NOTE: need to add 't' argument in the above car_dynamic function to perform test
+'''
 def TC_Simulate(Mode, initial, time_bound):
     time_step = 0.05
     time_bound = float(time_bound)

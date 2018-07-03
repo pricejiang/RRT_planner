@@ -115,31 +115,32 @@ def boxChecker(Xk, epsilon_k, obs, winsize):
         if obsCheck(x, y, rbLine, obsLine, (xg, yg), rb, ob[0], ob[1]):
             d = True
     
-    # if xg-r < 0 or yg-r>0:
-    #     a = False
-    # if xg+r > winsize[0] or yg -r < 0:
-    #     b = False
-    # if xg-r < 0 or yg + r > winsize[1]:
-    #     c = False
-    # if xg + r > winsize[0] or yg + r > winsize[1]:
-    #     d = False
     # print 'lt is  ',a
     # print 'rt is  ',b
     # print 'lb is  ',c
     # print 'rb is  ',d
     return a,b,c,d
 
-def eucDistance(p1, p2):
-    return sqrt((p1[0]-p2[0])*(p1[0]-p2[0]) + (p1[1]-p2[1])*(p1[1]-p2[1]))
+# def eucDistance(p1, p2):
+#     return sqrt((p1[0]-p2[0])*(p1[0]-p2[0]) + (p1[1]-p2[1])*(p1[1]-p2[1]))
 
-def distanceChecker(p, ob):
-    l1 = eucDistance(p, ob[0])
-    l2 = eucDistance(p, ob[1])
-    L = eucDistance(ob[0], ob[1])
+# def distanceChecker(p, ob):
+#     l1 = eucDistance(p, ob[0])
+#     l2 = eucDistance(p, ob[1])
+#     L = eucDistance(ob[0], ob[1])
 
-    beta = acos((l2*l2 + L*L - l1*l1)/(2*l2*L))
-    h = sin(beta)*l2
-    return h < 5
+#     beta = acos((l2*l2 + L*L - l1*l1)/(2*l2*L))
+#     h = sin(beta)*l2
+#     return h < 5
+
+'''
+    This function checks whether the given point p 
+    can be conncected to the goal directly
+'''
+def connectChecker(p, goal, obs):
+    a = ((goal[1]+goal[0])/2, (goal[3]+goal[2])/2)
+
+    return not collisionCheck(p, a, obs)
 
 if __name__ == '__main__':
     # print randomChecker((1,0), ((16,-1), (16,3)))

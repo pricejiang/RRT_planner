@@ -52,19 +52,16 @@ def main():
 
     # Call planner
     startTime = time.time()
-    ret = G.plan(5000, goal, 0.3, obs, screen)
+    ret = G.plan(5000, goal, 0.3, obs, screen, 0)
     endTime = time.time()
 
-    # Parse and draw  result
+    # Parse and draw result
     if ret == None:
         print 'No path find'
     elif type(ret) == list:
         print 'goal reached'
         print ret
         drawPath(screen, ret, goal, obs)
-    # else:
-    #     for b in ret:
-    #         drawRec(screen, ret[b], obs)
 
     print 'Used time ', endTime-startTime, ' seconds'
     
