@@ -150,7 +150,6 @@ class RRT():
         if p > 1 or p < 0:
             print "invalid p"
             return None
-        Box = {}
         color = (randint(1,255), randint(1,255), randint(1,255))
         for i in range(K):
             print i, 'th iteration'
@@ -203,6 +202,7 @@ class RRT():
                 if connectChecker(cornerPoint, goal, obs):
                     gc = ((goal[1]+goal[0])/2, (goal[3]+goal[2])/2)
                     theta_prime = atan((gc[1]-cornerPoint[1])/(gc[0]-cornerPoint[0]))
+                    flag = 0
                 # Otherwise, randomly select theta to be any direction opposite to the collision
                 else:
                     theta_prime = Xk.state[2]+np.pi

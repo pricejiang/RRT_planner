@@ -19,10 +19,7 @@ import math
     Output: dydt
 '''
 def car_dynamic(Xn, delta_f):
-    # xg, yg represent the location center of gravity of the car
-    # theta is orientation
-    # vy is the lateral speed
-    # r is the yaw rate/angular velocity
+    # Obtain vairables
     xg, yg, theta, vy, r = Xn
     xg = float(xg)
     yg = float(yg)

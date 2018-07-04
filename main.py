@@ -26,9 +26,9 @@ def getObs(n):
         obs.append(((0, 500), (500, 500)))
         obs.append(((500, 0), (500, 500)))
     elif n == 2:
-        obs.append(((0, 150), (200, 150)))
-        obs.append(((300, 250), (500, 250)))
-        obs.append(((0, 350), (200, 350)))
+        obs.append(((0, 150), (250, 150)))
+        obs.append(((250, 250), (500, 250)))
+        obs.append(((0, 350), (250, 350)))
         obs.append(((0, 0), (0, 500)))
         obs.append(((0, 0), (500, 0)))
         obs.append(((0, 500), (500, 500)))
@@ -39,7 +39,7 @@ def main():
     # Screen window size
     winsize = [500,500]
     # Initialize RRT 
-    G = RRT([350, 180, 2, 0.0, 0.0])
+    G = RRT([50, 50, 2, 0.0, 0.0])
 
     # Obtain obstacle and goal
     obs = []
@@ -52,7 +52,7 @@ def main():
 
     # Call planner
     startTime = time.time()
-    ret = G.plan(5000, goal, 0.3, obs, screen, 0)
+    ret = G.plan(5000, goal, 0.3, obs, screen, 1)
     endTime = time.time()
 
     # Parse and draw result
