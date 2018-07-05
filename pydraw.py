@@ -78,6 +78,11 @@ def drawRec(screen, boxes, obs, color):
     # wait = raw_input('---------- PAUSED, press ENTER to continue ----------')
     drawEnd()
 
+def drawNode(screen, Xn):
+    x = int(Xn[0])
+    y = int(Xn[1])
+    pygame.draw.circle(screen, green, (x,y), 1)
+
 def drawEnd():
     for e in pygame.event.get():
 	   if e.type == QUIT or (e.type == KEYUP and e.key == K_ESCAPE):

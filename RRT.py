@@ -165,6 +165,7 @@ class RRT():
 
             # Pick Xnear
             # pdb.set_trace()
+            # drawNode(screen, Xrand)
             self.Xnear = self.findNearest(Xrand)
             print self.Xnear.state
             # if flag == 1 and connectChecker(self.Xnear.state, goal, obs):
@@ -205,6 +206,11 @@ class RRT():
                 Bk = boxes[-1]
                 boxCheck =  boxChecker(Bk, obs, winsize)
                 cornerPoint = self.getXsubInit(boxCheck, Bk)
+                
+                # Grow the subtree with XsubInit
+                XsubInit = [int(cornerPoint[0]), int(cornerPoint[1]), random.randint(int(Bk.center.state[2]-epsilon),int(Bk.center.state[2]+epsilon)), random.randint(int(Bk.center.state[3]-epsilon),int(Bk.center.state[3]+epsilon)), random.randint(int(Bk.center.state[4]-epsilon),int(Bk.center.state[4]+epsilon))]
+                
+                Xc = self.findNearest(XsubInit)
                 # Determine the angle to start 
                 # If the point can be directly connected to goal, set theta directly to the goal
                 if connectChecker(cornerPoint, goal, obs):
@@ -213,14 +219,10 @@ class RRT():
                     flag = 0
                 # Otherwise, randomly select theta to be any direction opposite to the collision
                 else:
-                    theta_prime = Bk.center.state[2]+np.pi
-                
-                # Grow the subtree with XsubInit
-                XsubInit = [int(cornerPoint[0]), int(cornerPoint[1]), random.uniform(theta_prime-np.pi/6, theta_prime+np.pi/6), random.randint(int(Bk.center.state[3]-epsilon),int(Bk.center.state[3]+epsilon)), random.randint(int(Bk.center.state[4]-epsilon),int(Bk.center.state[4]+epsilon))]
-                
-                Xc = self.findNearest(XsubInit)
+                    theta_prime = Xc.state[2]
+                XsubInit[2] = theta_prime
                 Xnew = node(XsubInit, Xc)
-                Xnew.state[2] = Xc.state[2]
+                # Xnew.state[2] = Xc.state[2]
                 self.nodes.append(Xnew)
                 region.append(parseBox(boxes))
 
@@ -271,7 +273,7 @@ class RRT():
         x = Xnew.parent
         X_array = []
         # pdb.set_trace()
-        for i in range(5):
+        for i in range(4):
             if x == self.Xinit:
                 break
             X_array.append(x)
