@@ -8,6 +8,7 @@ import pdb
 from math import atan, ceil
 import time
 from operator import itemgetter
+from box import *
 
 
 delta_t = 0.2
@@ -26,7 +27,8 @@ class node():
         self.state = state
         self.parent = parent
         self.children = []
-        
+
+
 
 '''
     RRT class: the RRT planner class combined with the bicycle car model
@@ -58,10 +60,10 @@ class RRT():
         Output: the nearest node in RRT search tree to the point Xrand 
     '''
     def findNearest(self, Xrand):
-        if self.Xnear != self.nodes[0]:
-            nn = self.nodes[0]
-        else:
-            nn = self.nodes[1]
+        # if self.Xnear != self.nodes[0]:
+        nn = self.nodes[0]
+        # else:
+        #     nn = self.nodes[1]
         for p in self.nodes:
             if p == self.Xnear:
                 continue
@@ -150,10 +152,11 @@ class RRT():
         if p > 1 or p < 0:
             print "invalid p"
             return None
-        color = (randint(1,255), randint(1,255), randint(1,255))
+        color = (155, 240, 200)
+        region = []
         for i in range(K):
             print i, 'th iteration'
-            print flag
+            # print region
             # Find Xrand
             if random.random() < p:
                 Xrand = ((goal[1]+goal[0])/2, (goal[3]+goal[2])/2, random.random()*2*np.pi, 0, 0)
@@ -164,8 +167,8 @@ class RRT():
             # pdb.set_trace()
             self.Xnear = self.findNearest(Xrand)
             print self.Xnear.state
-            if flag == 1 and connectChecker(self.Xnear.state, goal, obs):
-                flag = 0
+            # if flag == 1 and connectChecker(self.Xnear.state, goal, obs):
+            #     flag = 0
             # Calculate new state from using Xrand and Xnear
             u = self.selectInput(Xrand, self.Xnear.state, obs)
             if u == None:
@@ -174,8 +177,10 @@ class RRT():
             p1 = (int(self.Xnear.state[0]), int(self.Xnear.state[1]))
             p2 = (int(Xnew.state[0]), int(Xnew.state[1]))
             # Check if connecting to Xnew will collide with obstacles
-            collision = collisionCheck(p1, p2, obs)
-            
+            if region != []:
+                if regionChecker(region, Xnew):
+                    continue
+            collision = collisionChecker(p1, p2, obs)
                 
             # If no intersections with obstacles, add Xnew to the tree and upate the graph
             if not collision:
@@ -190,13 +195,16 @@ class RRT():
                 X_array = self.collisionClean(Xnew)
                 epsilon = 2
                 epsilon_array = self.branchElim(X_array, epsilon)
+                boxes = []
+                for i in range(len(X_array)):
+                    b = box(X_array[i], epsilon_array[i])
+                    boxes.append(b)
                 # Draw the reachtube boxes
-                drawRec(screen, (X_array, epsilon_array), obs, color)
+                drawRec(screen, boxes, obs, color)
                 # Perform a few checks to get the corner point for subtree initiation
-                Xk = X_array[-1]
-                epsilon_k = epsilon_array[-1]
-                boxCheck =  boxChecker(Xk, epsilon_k, obs, winsize)
-                cornerPoint = self.getXsubInit(boxCheck, Xk, epsilon_k)
+                Bk = boxes[-1]
+                boxCheck =  boxChecker(Bk, obs, winsize)
+                cornerPoint = self.getXsubInit(boxCheck, Bk)
                 # Determine the angle to start 
                 # If the point can be directly connected to goal, set theta directly to the goal
                 if connectChecker(cornerPoint, goal, obs):
@@ -205,19 +213,20 @@ class RRT():
                     flag = 0
                 # Otherwise, randomly select theta to be any direction opposite to the collision
                 else:
-                    theta_prime = Xk.state[2]+np.pi
+                    theta_prime = Bk.center.state[2]+np.pi
                 
                 # Grow the subtree with XsubInit
-                XsubInit = [int(cornerPoint[0]), int(cornerPoint[1]), random.uniform(theta_prime-1, theta_prime+1), random.randint(int(Xk.state[3]-epsilon),int(Xk.state[3]+epsilon)), random.randint(int(Xk.state[4]-epsilon),int(Xk.state[4]+epsilon))]
-                subG = RRT(XsubInit)
-                subpath = subG.plan(5000-i, goal, p, obs, screen, flag)
+                XsubInit = [int(cornerPoint[0]), int(cornerPoint[1]), random.uniform(theta_prime-np.pi/6, theta_prime+np.pi/6), random.randint(int(Bk.center.state[3]-epsilon),int(Bk.center.state[3]+epsilon)), random.randint(int(Bk.center.state[4]-epsilon),int(Bk.center.state[4]+epsilon))]
+                
                 Xc = self.findNearest(XsubInit)
-
-                return self.getPath(Xc) + subpath
+                Xnew = node(XsubInit, Xc)
+                Xnew.state[2] = Xc.state[2]
+                self.nodes.append(Xnew)
+                region.append(parseBox(boxes))
 
             
             # If reaches the goal region, find the path and return it
-            if goalCheck(Xnew.state, goal):
+            if goalChecker(Xnew.state, goal):
                 return self.getPath(Xnew)
         
         return None
@@ -261,12 +270,15 @@ class RRT():
         
         x = Xnew.parent
         X_array = []
+        # pdb.set_trace()
         for i in range(5):
             if x == self.Xinit:
                 break
             X_array.append(x)
             # if len(x.children) >= 2:
             #     break
+            if x in self.nodes:
+                self.nodes.remove(x)
             x = x.parent
         X_array.reverse()
         return X_array
@@ -424,15 +436,15 @@ class RRT():
     '''
         This function returns a corner of the outer most box as the subtree initial node
     '''
-    def getXsubInit(self, boxCheck, Xk, epsilon_k):
-        xg = Xk.state[0]
-        yg = Xk.state[1]
-        r = epsilon_k
+    def getXsubInit(self, boxCheck, Bk):
+        xg = Bk.xg
+        yg = Bk.yg
+        r = Bk.epsilon
         # Four corner points coordinate
-        lt = (xg-r, yg-r)
-        rt = (xg+r, yg-r)
-        lb = (xg-r, yg+r)
-        rb = (xg+r, yg+r)
+        lt = Bk.lt
+        rt = Bk.rt
+        lb = Bk.lb
+        rb = Bk.rb
         # Randomly select a corner 
         ret = []
         if not boxCheck[0]:

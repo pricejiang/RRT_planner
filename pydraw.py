@@ -60,19 +60,18 @@ def drawPath(screen, path, goal, obs):
     Inputs: screen - the screen to draw on 
             tmp - a tuple of X_array and epsilon array
 '''
-def drawRec(screen, tmp, obs, color):
-    X_array, epsilon_array = tmp
+def drawRec(screen, boxes, obs, color):
     # color = (randint(1,255), randint(1,255), randint(1,255))
-    for i in range(len(X_array)):
-        X0 = X_array[i]
-        epsilon0 = epsilon_array[i]
+    for b in boxes:
+        X0 = b.center
+        epsilon0 = b.epsilon
         # pygame.draw.rect(screen, (max(255-i*10,0), min(i*10, 255), max(255-i*10,0)), (X0.state[0]-epsilon0, X0.state[1]-epsilon0, 2*epsilon0, 2*epsilon0))
         # pygame.draw.rect(screen, red, (X1.state[0]-epsilon1, X1.state[1]-epsilon1, 2*epsilon1, 2*epsilon1))
         s = pygame.Surface((2*epsilon0, 2*epsilon0))
         s.set_alpha(70)
         s.fill(color)
         screen.blit(s, (X0.state[0]-epsilon0, X0.state[1]-epsilon0))
-        print 'Box centered at ', (X0.state[0], X0.state[1]), 'with radius ', epsilon0
+        # print 'Box centered at ', (X0.state[0], X0.state[1]), 'with radius ', epsilon0
         # boxChecker(X0, epsilon0, obs)
         pygame.display.update()
 
