@@ -156,7 +156,7 @@ def regionChecker(region, X):
         box = r[0]
         theta_range = r[1]
         if xg <= box.right and xg >= box.left and yg <= box.bottom and yg >= box.top:
-            if theta <= theta_range[1]+np.pi/6 and theta >= theta_range[0]-np.pi/6:
+            if theta <= theta_range[1]+np.pi/9 and theta >= theta_range[0]-np.pi/9:
                 return True
 
     return False

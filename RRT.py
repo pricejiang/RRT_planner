@@ -205,25 +205,27 @@ class RRT():
                 # Perform a few checks to get the corner point for subtree initiation
                 Bk = boxes[-1]
                 boxCheck =  boxChecker(Bk, obs, winsize)
-                cornerPoint = self.getXsubInit(boxCheck, Bk)
+                cornerPoints = self.getXsubInit(boxCheck, Bk)
                 
                 # Grow the subtree with XsubInit
-                XsubInit = [int(cornerPoint[0]), int(cornerPoint[1]), random.randint(int(Bk.center.state[2]-epsilon),int(Bk.center.state[2]+epsilon)), random.randint(int(Bk.center.state[3]-epsilon),int(Bk.center.state[3]+epsilon)), random.randint(int(Bk.center.state[4]-epsilon),int(Bk.center.state[4]+epsilon))]
+                for point in cornerPoints:
+                    point = [int(point[0]), int(point[1]), random.randint(int(Bk.center.state[2]-epsilon),int(Bk.center.state[2]+epsilon)), random.randint(int(Bk.center.state[3]-epsilon),int(Bk.center.state[3]+epsilon)), random.randint(int(Bk.center.state[4]-epsilon),int(Bk.center.state[4]+epsilon))]
+                # XsubInit = [int(cornerPoint[0]), int(cornerPoint[1]), random.randint(int(Bk.center.state[2]-epsilon),int(Bk.center.state[2]+epsilon)), random.randint(int(Bk.center.state[3]-epsilon),int(Bk.center.state[3]+epsilon)), random.randint(int(Bk.center.state[4]-epsilon),int(Bk.center.state[4]+epsilon))]
                 
-                Xc = self.findNearest(XsubInit)
-                # Determine the angle to start 
-                # If the point can be directly connected to goal, set theta directly to the goal
-                if connectChecker(cornerPoint, goal, obs):
-                    gc = ((goal[1]+goal[0])/2, (goal[3]+goal[2])/2)
-                    theta_prime = atan((gc[1]-cornerPoint[1])/(gc[0]-cornerPoint[0]))
-                    flag = 0
-                # Otherwise, randomly select theta to be any direction opposite to the collision
-                else:
-                    theta_prime = Xc.state[2]
-                XsubInit[2] = theta_prime
-                Xnew = node(XsubInit, Xc)
+                    Xc = self.findNearest(point)
+                    # Determine the angle to start 
+                    # If the point can be directly connected to goal, set theta directly to the goal
+                    if connectChecker(point, goal, obs):
+                        gc = ((goal[1]+goal[0])/2, (goal[3]+goal[2])/2)
+                        theta_prime = atan((gc[1]-point[1])/(gc[0]-point[0]))
+                        flag = 0
+                    # Otherwise, randomly select theta to be any direction opposite to the collision
+                    else:
+                        theta_prime = Xc.state[2]
+                    point[2] = theta_prime
+                    Xnew = node(point, Xc)
                 # Xnew.state[2] = Xc.state[2]
-                self.nodes.append(Xnew)
+                    self.nodes.append(Xnew)
                 region.append(parseBox(boxes))
 
             
@@ -459,7 +461,7 @@ class RRT():
             ret.append(rb)
         
         random.shuffle(ret)
-        return ret[0]
+        return ret
 
 if __name__ == '__main__': 
     G = RRT([370, 200, 6.0, 0.0, 0.0])
