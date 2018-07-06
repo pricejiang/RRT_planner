@@ -1,5 +1,5 @@
 import numpy as np
-from Car_Dynamic import *
+# from Car_Dynamic import *
 import random
 from pydraw import *
 from z3 import *
@@ -11,12 +11,10 @@ from operator import itemgetter
 from box import *
 
 
-delta_t = 0.2
 min_steer = -np.pi/6
 max_steer = np.pi/6
 winsize = [500, 500]
-# width = 500
-# height = 500
+
 inf = np.inf
 
 '''
@@ -35,11 +33,12 @@ class node():
 '''
 class RRT():
     
-    def __init__(self, init):
+    def __init__(self, init, newState):
         self.nodes = []
         self.Xinit = node(init, None)
         self.nodes.append(self.Xinit)
         self.Xnear = node(None, None)
+        self.newState = newState
 
     '''
         randomConfig: this function generates a random point on the space Xfree
@@ -70,24 +69,6 @@ class RRT():
             if self.dist(p.state, Xrand) < self.dist(nn.state, Xrand):
                 nn = p
         return nn
-
-    '''
-        This function uses Fourth-Order Runge-Kutta method to calculate next state.
-        Inputs: Xn - current state; a list
-                delta_f - steering angle of the car 
-        Output: Xnew - next state given current state
-        
-    '''
-    def newState(self, Xn, delta_f):
-        # Fourth-Order Runge-Kutta method
-        k1 = car_dynamic(Xn, delta_f)
-        k2 = car_dynamic(Xn+k1/2, delta_f)
-        k3 = car_dynamic(Xn+k2/2, delta_f)
-        k4 = car_dynamic(Xn+k3, delta_f)
-
-        Xnew = Xn + (k1 + 2*k2 + 2*k3 + k4)*delta_t/6
-        Xnew = [float(Xnew[0]), float(Xnew[1]), float(Xnew[2]), float(Xnew[3]), float(Xnew[4])]
-        return Xnew
 
     '''
         This function is calculate the next state for the vehicle dynamics. 
@@ -218,7 +199,6 @@ class RRT():
                     if connectChecker(point, goal, obs):
                         gc = ((goal[1]+goal[0])/2, (goal[3]+goal[2])/2)
                         theta_prime = atan((gc[1]-point[1])/(gc[0]-point[0]))
-                        flag = 0
                     # Otherwise, randomly select theta to be any direction opposite to the collision
                     else:
                         theta_prime = Xc.state[2]
