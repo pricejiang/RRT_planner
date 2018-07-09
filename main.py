@@ -41,16 +41,16 @@ def main(argv):
         print "Must add a model name"
         return None
 
-    newState = parseInput(argv)
+    selectInput, randomConfig, tryInput = parseInput(argv)
     # Screen window size
     winsize = [500,500]
     # Initialize RRT 
-    G = RRT([50, 50, 2, 0.0, 0.0], newState)
+    G = RRT([250.0, 250.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], selectInput, randomConfig, tryInput)
 
     # Obtain obstacle and goal
     obs = []
     # n = raw_input('Please select obstacle scenario, 1 or 2\n')
-    n = 2
+    n = 3
     obs = getObs(int(n))
     goal = (450,500,450,500)
     # Initialize screen

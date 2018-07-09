@@ -16,7 +16,7 @@ def import_newState(path):
         module = importlib.import_module(path)
     except:
         print("Import simulation function failed!")
-    return module.newState
+    return module.selectInput, module.randomConfig, module.tryInput
     
 
 if __name__ == '__main__':
