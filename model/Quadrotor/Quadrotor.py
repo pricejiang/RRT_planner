@@ -4,10 +4,10 @@ import matplotlib.pyplot as plt
 import math
 import random
 
-min_u2 = -0.00001
-max_u2 = 0.00001
-min_u3 = -0.00001
-max_u3 = 0.00001
+min_u2 = -0.01
+max_u2 = 0.01
+min_u3 = -0.01
+max_u3 = 0.01
 
 inf = np.inf
 
@@ -32,7 +32,8 @@ inf = np.inf
             u - a list of input
     Output: dydt
 '''
-def Quadrotor_Dynamic(Xn, u):
+def Quadrotor_Dynamic(Xn, t, u):
+    # print Xn
     # obtain Vairables
     x1, x2, x9, x3, x4, x5, x6, x7, x8, x10, x11, x12 = Xn
     x1 = float(x1)
@@ -108,21 +109,20 @@ def randomConfig(height, width):
     Inputs: Xn - current state; a list
             u - input control
     Output: Xnew - next state given current state
-        
 '''
-def newState(Xn, u):
-    # Fourth-Order Runge-Kutta method
-    k1 = Quadrotor_Dynamic(Xn, u)
-    k2 = Quadrotor_Dynamic(Xn+k1/2, u)
-    k3 = Quadrotor_Dynamic(Xn+k2/2, u)
-    k4 = Quadrotor_Dynamic(Xn+k3, u)
-    delta_t = 0.2
-    Xnew = Xn + (k1 + 2*k2 + 2*k3 + k4)*delta_t/6
-    Xnew = list(Xnew)
-    print Xnew
-    for i in range(len(Xnew)):
-        Xnew[i] = float(Xnew[i])
-    return Xnew
+# def newState(Xn, u):
+#     # Fourth-Order Runge-Kutta method
+#     k1 = Quadrotor_Dynamic(Xn, u)
+#     k2 = Quadrotor_Dynamic(Xn+k1/2, u)
+#     k3 = Quadrotor_Dynamic(Xn+k2/2, u)
+#     k4 = Quadrotor_Dynamic(Xn+k3, u)
+#     delta_t = 0.00006
+#     Xnew = Xn + (k1 + 2*k2 + 2*k3 + k4)*delta_t/6
+#     Xnew = list(Xnew)
+#     print Xnew
+#     for i in range(len(Xnew)):
+#         Xnew[i] = float(Xnew[i])
+#     return Xnew
 
 '''
     This function is calculate the next state for the vehicle dynamics. 
@@ -142,13 +142,13 @@ def selectInput(Xrand, Xnear, obs):
         u3 = min_u3
         while u3 <= max_u3:
             u = [0.0, u2, u3]
-            Xnew = newState(Xnear, u)
+            Xnew = newState(Xnear, u, 0.2)
             distance = dist(Xnew, Xrand)
             if  distance < bestDistance:
                 bestState = Xnew
                 bestDistance = distance
-            u3 += 0.00001 
-        u2 += 0.00001    
+            u3 += 0.01
+        u2 += 0.01    
     return bestState
 
 '''
@@ -178,10 +178,10 @@ def tryInput(Xn):
     while u2 < max_u2:
         while u3 < max_u3:
             u = [0.0, u2, u3]
-            Xnew = newState(Xn, u)
+            Xnew = newState(Xn, u, 0.2)
             ret.append(Xnew)
-            u3 += 0.0001 
-        u2 += 0.0001    
+            u3 += 0.01
+        u2 += 0.01
     return ret
 
 # -------------------------------- Simulator for test only ---------------------------------
@@ -191,7 +191,7 @@ def tryInput(Xn):
     This simulator is for test only 
     NOTE: need to add 't' argument in the above car_dynamic function to perform test
 '''
-def TC_Simulate(Mode, initial, time_bound):
+def newState(initial, u, time_bound):
     time_step = 0.05
     time_bound = float(time_bound)
     initial = [float(tmp)  for tmp in initial]
@@ -204,14 +204,14 @@ def TC_Simulate(Mode, initial, time_bound):
     for step in t:
         newt.append(float(format(step, '.2f')))
     t = newt
-    u = [0.0, 0.0001, 0.0001]
+    # u = [0.0, 0.005, 0.005]
     sol = odeint(Quadrotor_Dynamic, initial, t, args=(u,), hmax=time_step)
 
     # Construct the final output
     trace = []
     for j in range(len(t)):
         tmp = []
-        tmp.append(t[j])
+        # tmp.append(t[j])
         tmp.append(float(sol[j, 0]))
         tmp.append(float(sol[j, 1]))
         tmp.append(float(sol[j, 2]))
@@ -225,14 +225,14 @@ def TC_Simulate(Mode, initial, time_bound):
         tmp.append(float(sol[j, 10]))
         tmp.append(float(sol[j, 11]))
         trace.append(tmp)
-    return trace        
+    return tmp        
 
 if __name__ == "__main__":
 	sol = TC_Simulate('Default', [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], 500)
         for s in sol:
             print s
-        a = [row[1] for row in sol]
-        b = [row[2] for row in sol]
+        a = [row[0] for row in sol]
+        b = [row[1] for row in sol]
     
         plt.plot(a, b, '-r')
         plt.show()

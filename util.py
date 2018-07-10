@@ -1,12 +1,17 @@
 import importlib
 import sys
 import pdb
+import json
 
 def parseInput(arg):
-    model = arg[-1]
-    path = "model/"+model
+    assert ".json" in sys.argv[-1], "Please provide json input file"
+    with open(sys.argv[-1], 'r') as f:
+        data = json.load(f)
+    # model = arg[-1]
+    # path = "model/"+model
     # print path
-    return import_newState(path)
+        module = import_newState(data["directory"])
+        return module, data
     
 
 def import_newState(path):

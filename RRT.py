@@ -12,11 +12,6 @@ from box import *
 from helper import *
 
 
-
-winsize = [500, 500]
-
-
-
 '''
     node class: basic element of RRT search tree
 '''
@@ -33,7 +28,7 @@ class node():
 '''
 class RRT():
     
-    def __init__(self, init, selectInput, randomConfig, tryInput):
+    def __init__(self, init, selectInput, randomConfig, tryInput, winsize):
         self.nodes = []
         self.Xinit = node(init, None)
         self.nodes.append(self.Xinit)
@@ -41,6 +36,7 @@ class RRT():
         self.selectInput = selectInput
         self.randomConfig = randomConfig
         self.tryInput = tryInput
+        self.winsize = winsize
 
 
     '''
@@ -81,7 +77,7 @@ class RRT():
                 p - try_goal_probability; the probability that Xgoal is picked as Xrand
                 obs - obstacle region Xobs
                 screen - the pygame screen for printing the game status
-                winsize - size of the screen window
+                flag - indicate whether corner subtree method is using
         Output: the path from Xinit to Xgoal
 
     '''
@@ -99,13 +95,13 @@ class RRT():
             if random.random() < p:
                 Xrand = ((goal[1]+goal[0])/2, (goal[3]+goal[2])/2, random.random()*2*np.pi, 0, 0)
             else:
-                Xrand = self.randomConfig(winsize[0], winsize[1])
+                Xrand = self.randomConfig(self.winsize[0], self.winsize[1])
 
             # Pick Xnear
             # pdb.set_trace()
             # drawNode(screen, Xrand)
             self.Xnear = self.findNearest(Xrand)
-            # print self.Xnear.state
+            print self.Xnear.state
 
             # Calculate new state from using Xrand and Xnear
             u = self.selectInput(Xrand, self.Xnear.state, obs)
@@ -141,7 +137,7 @@ class RRT():
                 drawRec(screen, boxes, obs, color)
                 # Perform a few checks to get the corner point for subtree initiation
                 Bk = boxes[-1]
-                boxCheck =  boxChecker(Bk, obs, winsize)
+                boxCheck =  boxChecker(Bk, obs, self.winsize)
                 cornerPoints = self.getXsubInit(boxCheck, Bk)
                 
                 # Grow the subtree with XsubInit
@@ -230,23 +226,29 @@ class RRT():
         for i in range(16):
             # The first point is X0
             if i == 0:
-                x, y, theta, vy, r = X0.state
+                Xn = X0.state
             # Random configuration on 5 dimensions
             else:
                 x = random.randint(int(X0.state[0])-epsilon, int(X0.state[0])+epsilon)
-                if x > winsize[0]:
-                    x = winsize[0]
+                if x > self.winsize[0]:
+                    x = self.winsize[0]
                 if x < 0:
                     x = 0
                 y = random.randint(int(X0.state[1])-epsilon, int(X0.state[1])+epsilon)
-                if y > winsize[1]:
-                    y = winsize[1]
+                if y > self.winsize[1]:
+                    y = self.winsize[1]
                 if y < 0:
                     y = 0
-                theta = random.randint(int(X0.state[2])-epsilon, int(X0.state[2])+epsilon)
-                vy = random.randint(int(X0.state[3])-epsilon, int(X0.state[3])+epsilon)
-                r = random.randint(int(X0.state[4])-epsilon, int(X0.state[4])+epsilon)
-            Xn = [x, y, theta, vy, r]
+                Xn = [x,y]
+                # theta = random.randint(int(X0.state[2])-epsilon, int(X0.state[2])+epsilon)
+                # vy = random.randint(int(X0.state[3])-epsilon, int(X0.state[3])+epsilon)
+                # r = random.randint(int(X0.state[4])-epsilon, int(X0.state[4])+epsilon)
+                for i in range(len(X0.state)):
+                    if i < 2:
+                        continue
+                    tmp = random.randint(int(X0.state[i])-epsilon, int(X0.state[i])+epsilon)
+                    Xn.append(tmp)
+            # Xn = [x, y, theta, vy, r]
             X0_array.append(Xn)
         epsilon_prime = epsilon
         Xc = X0
