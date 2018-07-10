@@ -67,6 +67,24 @@ def car_dynamic(Xn, delta_f):
     return dydt 
 
 '''
+        This function uses Fourth-Order Runge-Kutta method to calculate next state.
+        Inputs: Xn - current state; a list
+                delta_f - steering angle of the car 
+        Output: Xnew - next state given current state
+        
+    '''
+def newState(Xn, delta_f):
+    # Fourth-Order Runge-Kutta method
+    k1 = car_dynamic(Xn, delta_f)
+    k2 = car_dynamic(Xn+k1/2, delta_f)
+    k3 = car_dynamic(Xn+k2/2, delta_f)
+    k4 = car_dynamic(Xn+k3, delta_f)
+    delta_t = 0.2
+    Xnew = Xn + (k1 + 2*k2 + 2*k3 + k4)*delta_t/6
+    Xnew = [float(Xnew[0]), float(Xnew[1]), float(Xnew[2]), float(Xnew[3]), float(Xnew[4])]
+    return Xnew
+
+'''
     This simulator is for test only 
     NOTE: need to add 't' argument in the above car_dynamic function to perform test
 '''

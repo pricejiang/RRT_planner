@@ -3,6 +3,7 @@ import random
 from z3 import *
 from pydraw import *
 import time
+from util import *
 
 '''
     This function gives the configuration of the obstacles in the space. 
@@ -35,11 +36,18 @@ def getObs(n):
         obs.append(((500, 0), (500, 500)))
     return obs
 
-def main():
+def main(argv):
+    if len(argv) < 2:
+        print "Must add a model name"
+        return None
+
+    module, data = parseInput(argv)
+    selectInput, randomConfig, tryInput = module
+    initial = data["initial"]
     # Screen window size
     winsize = [500,500]
     # Initialize RRT 
-    G = RRT([50, 50, 2, 0.0, 0.0])
+    G = RRT(initial, selectInput, randomConfig, tryInput, winsize)
 
     # Obtain obstacle and goal
     obs = []
@@ -66,4 +74,4 @@ def main():
     print 'Used time ', endTime-startTime, ' seconds'
     
 if __name__ == '__main__':
-    main()
+    main(sys.argv)

@@ -1,5 +1,6 @@
 from z3 import *
 from math import sqrt, acos, sin
+import numpy as np
 
 '''
     This function returns the equation of the line defined by the two points given
@@ -23,7 +24,7 @@ def getEqn(x, y, start, end):
 '''
     This function checks if Xnew is within the goal region
 '''
-def goalCheck(Xnew, goal):
+def goalChecker(Xnew, goal):
     if(Xnew[0] >= goal[0] and Xnew[0] <= goal[1] and Xnew[1] >= goal[2] and Xnew[1] <= goal[3]):
         return True
     else: 
@@ -65,7 +66,7 @@ def obsCheck(x, y, rrtLine, obsLine, p1, p2, ob1, ob2):
     Return: True if intersects
             False if not
 '''
-def collisionCheck(p1, p2, obs):
+def collisionChecker(p1, p2, obs):
     x1 = p1[0]
     y1 = p1[1]
 
@@ -87,15 +88,15 @@ def collisionCheck(p1, p2, obs):
         #     flag = True
     return flag
 
-def boxChecker(Xk, epsilon_k, obs, winsize):
-    xg = Xk.state[0]
-    yg = Xk.state[1]
-    r = epsilon_k
+def boxChecker(Bk, obs, winsize):
+    xg = Bk.xg
+    yg = Bk.yg
+    r = Bk.epsilon
     # Four corner points coordinate
-    lt = (xg-r, yg-r)
-    rt = (xg+r, yg-r)
-    lb = (xg-r, yg+r)
-    rb = (xg+r, yg+r)
+    lt = Bk.lt
+    rt = Bk.rt
+    lb = Bk.lb
+    rb = Bk.rb
 
     x = Real('x')
     y = Real('y')
@@ -104,22 +105,27 @@ def boxChecker(Xk, epsilon_k, obs, winsize):
     rtLine = getEqn(x, y, (xg, yg), rt)
     lbLine = getEqn(x, y, (xg, yg), lb)
     rbLine = getEqn(x, y, (xg, yg), rb)
+    ob_k = None
     for ob in obs:
         obsLine = getEqn(x, y, ob[0], ob[1])
         if obsCheck(x, y, ltLine, obsLine, (xg, yg), lt, ob[0], ob[1]):
             a = True
+            ob_k = ob
         if obsCheck(x, y, rtLine, obsLine, (xg, yg), rt, ob[0], ob[1]):
             b = True
+            ob_k = ob
         if obsCheck(x, y, lbLine, obsLine, (xg, yg), lb, ob[0], ob[1]):
             c = True
+            ob_k = ob
         if obsCheck(x, y, rbLine, obsLine, (xg, yg), rb, ob[0], ob[1]):
             d = True
+            ob_k = ob
     
     # print 'lt is  ',a
     # print 'rt is  ',b
     # print 'lb is  ',c
     # print 'rb is  ',d
-    return a,b,c,d
+    return a,b,c,d,ob_k
 
 # def eucDistance(p1, p2):
 #     return sqrt((p1[0]-p2[0])*(p1[0]-p2[0]) + (p1[1]-p2[1])*(p1[1]-p2[1]))
@@ -140,8 +146,20 @@ def boxChecker(Xk, epsilon_k, obs, winsize):
 def connectChecker(p, goal, obs):
     a = ((goal[1]+goal[0])/2, (goal[3]+goal[2])/2)
 
-    return not collisionCheck(p, a, obs)
+    return not collisionChecker(p, a, obs)
 
+def regionChecker(region, X):
+    xg = X.state[0]
+    yg = X.state[1]
+    theta = X.state[2]
+    for r in region:
+        box = r[0]
+        theta_range = r[1]
+        if xg <= box.right and xg >= box.left and yg <= box.bottom and yg >= box.top:
+            if theta <= theta_range[1]+np.pi/9 and theta >= theta_range[0]-np.pi/9:
+                return True
+
+    return False
 if __name__ == '__main__':
     # print randomChecker((1,0), ((16,-1), (16,3)))
 
