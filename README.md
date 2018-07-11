@@ -17,7 +17,7 @@ For example:
 python main.py input/Car_Dynamic.json
 ```
 ## Dynamic Models
-### Bicycle Model
+### Car Dynamic Model
 
 A bicycle dynamic car model. 
 
@@ -34,3 +34,9 @@ Note: there are some mistakes in the paper.
 A Quadcopter dynamic model. 
 
 Source Paper: https://easychair.org/publications/open/sr6 model 3.3
+
+### Car Kinematic Model
+
+A single track kinematic car model. 
+
+Source: [CommonRoad: Vehicle Models](https://gitlab.com/commonroad/commonroad.gitlab.io/raw/master/documentation/vehicleModels_commonRoad.pdf) by Matthias Althoff
