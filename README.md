@@ -3,6 +3,11 @@ Implementation of RRT path planner and several dynamic models
 
 
 ## Quick Start
+### Prerequisites
+There are some packages needed:
+* **z3-solver** 
+* **pygame**
+### Run
 Simply type:
 ```
 python main.py input/[model].json
