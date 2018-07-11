@@ -37,6 +37,8 @@ Source Paper: https://easychair.org/publications/open/sr6 model 3.3
 
 ### Car Kinematic Model
 
-A single track kinematic car model. 
+A kinematic single track car model. 
 
 Source: [CommonRoad: Vehicle Models](https://gitlab.com/commonroad/commonroad.gitlab.io/raw/master/documentation/vehicleModels_commonRoad.pdf) by Matthias Althoff
+
+Model 3: Kinematic Single-Track Model 
