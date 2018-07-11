@@ -4,13 +4,13 @@ Implementation of RRT path planner and several dynamic models
 
 ## Quick Start
 Simply type:
-'''
+```
 python main.py input/[model].json
-'''
+```
 For example:
-'''
+```
 python main.py input/Car_Dynamic.json
-'''
+```
 ## Dynamic Models
 ### Bicycle Model
 
