@@ -95,7 +95,7 @@ def Quadrotor_Dynamic(Xn, t, u):
     randomConfig: this function generates a random point on the space Xfree
     Inputs: height - height of the screen
             width - width of the screen
-    Output: a random point on the space Xfree
+    Output: a random configuration on the space Xfree
 '''
 def randomConfig(height, width):
     x = random.random()*width

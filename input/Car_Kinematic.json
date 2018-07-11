@@ -1,0 +1,6 @@
+{
+    "variables":["sx", "sx", "psi","v","delta"],
+    "initial":[50.0, 50.0, 0.0, 0.0, 0.0],
+    "method":1,
+    "directory":"model/Car_Kinematic"
+}
