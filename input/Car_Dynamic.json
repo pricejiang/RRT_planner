@@ -1,5 +1,6 @@
 {
     "variables":["xg", "yg", "theta","vy","r"],
     "initial":[50.0, 50.0, 0.0, 0.0, 0.0],
+    "method":1,
     "directory":"model/Car_Dynamic"
 }

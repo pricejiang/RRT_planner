@@ -99,10 +99,10 @@ class RRT():
 
             # Pick Xnear
             # pdb.set_trace()
-            # drawNode(screen, Xrand)
+            # drawNode(screen, Xrand, 1)
             self.Xnear = self.findNearest(Xrand)
             print self.Xnear.state
-
+            # drawNode(screen, self.Xnear.state, 2)
             # Calculate new state from using Xrand and Xnear
             u = self.selectInput(Xrand, self.Xnear.state, obs)
             if u == None:
@@ -240,9 +240,7 @@ class RRT():
                 if y < 0:
                     y = 0
                 Xn = [x,y]
-                # theta = random.randint(int(X0.state[2])-epsilon, int(X0.state[2])+epsilon)
-                # vy = random.randint(int(X0.state[3])-epsilon, int(X0.state[3])+epsilon)
-                # r = random.randint(int(X0.state[4])-epsilon, int(X0.state[4])+epsilon)
+
                 for i in range(len(X0.state)):
                     if i < 2:
                         continue

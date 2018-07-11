@@ -34,6 +34,11 @@ def getObs(n):
         obs.append(((0, 0), (500, 0)))
         obs.append(((0, 500), (500, 500)))
         obs.append(((500, 0), (500, 500)))
+    else:
+        obs.append(((0, 0), (0, 500)))
+        obs.append(((0, 0), (500, 0)))
+        obs.append(((0, 500), (500, 500)))
+        obs.append(((500, 0), (500, 500)))
     return obs
 
 def main(argv):
@@ -60,7 +65,7 @@ def main(argv):
 
     # Call planner
     startTime = time.time()
-    ret = G.plan(5000, goal, 0.3, obs, screen, 1)
+    ret = G.plan(5000, goal, 0.3, obs, screen, data["method"])
     endTime = time.time()
 
     # Parse and draw result
