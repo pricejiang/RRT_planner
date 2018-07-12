@@ -5,6 +5,7 @@ import math
 import random
 # from ... import helper
 
+# Some global variabes, angle in rad
 min_steer = -np.pi/6
 max_steer = np.pi/6
 
@@ -76,7 +77,7 @@ def Car_Dynamic(Xn, delta_f):
     randomConfig: this function generates a random point on the space Xfree
     Inputs: height - height of the screen
             width - width of the screen
-    Output: a random point on the space Xfree
+    Output: a random configuration on the space Xfree
 '''
 def randomConfig(height, width):
     x = random.random()*width

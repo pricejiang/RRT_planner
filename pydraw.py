@@ -78,10 +78,20 @@ def drawRec(screen, boxes, obs, color):
     # wait = raw_input('---------- PAUSED, press ENTER to continue ----------')
     drawEnd()
 
-def drawNode(screen, Xn):
+'''
+    This function draws a given node specified by t(type) on the screen
+    This function is for debug purposes. 
+    Inputs: screen - the screen to draw on
+            Xn - the node to be drawn
+            t - type; 1 - Xrand; 2 - Xnear
+'''
+def drawNode(screen, Xn, t):
     x = int(Xn[0])
     y = int(Xn[1])
-    pygame.draw.circle(screen, green, (x,y), 1)
+    if t == 1:
+        pygame.draw.circle(screen, green, (x,y), 1)
+    elif t == 2:
+        pygame.draw.circle(screen, red, (x,y), 1)
 
 def drawEnd():
     for e in pygame.event.get():

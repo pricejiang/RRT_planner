@@ -4,10 +4,10 @@ import matplotlib.pyplot as plt
 import math
 import random
 
-min_u2 = -0.01
-max_u2 = 0.01
-min_u3 = -0.01
-max_u3 = 0.01
+min_u2 = -1
+max_u2 = 1
+min_u3 = -1
+max_u3 = 1
 
 inf = np.inf
 
@@ -95,7 +95,7 @@ def Quadrotor_Dynamic(Xn, t, u):
     randomConfig: this function generates a random point on the space Xfree
     Inputs: height - height of the screen
             width - width of the screen
-    Output: a random point on the space Xfree
+    Output: a random configuration on the space Xfree
 '''
 def randomConfig(height, width):
     x = random.random()*width
@@ -142,13 +142,13 @@ def selectInput(Xrand, Xnear, obs):
         u3 = min_u3
         while u3 <= max_u3:
             u = [0.0, u2, u3]
-            Xnew = newState(Xnear, u, 0.2)
+            Xnew = newState(Xnear, u, 0.3)
             distance = dist(Xnew, Xrand)
             if  distance < bestDistance:
                 bestState = Xnew
                 bestDistance = distance
-            u3 += 0.01
-        u2 += 0.01    
+            u3 += 1
+        u2 += 1   
     return bestState
 
 '''
@@ -172,16 +172,17 @@ def dist(s1, s2):
 '''
 def tryInput(Xn):
     u2 = min_u2
-    u3 = min_u3
+    
     ret = []
 
     while u2 < max_u2:
+        u3 = min_u3
         while u3 < max_u3:
             u = [0.0, u2, u3]
             Xnew = newState(Xn, u, 0.2)
             ret.append(Xnew)
-            u3 += 0.01
-        u2 += 0.01
+            u3 += 1
+        u2 += 1
     return ret
 
 # -------------------------------- Simulator for test only ---------------------------------

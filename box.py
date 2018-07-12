@@ -22,6 +22,14 @@ class box():
     def getSides(self):
         return self.lt, self.rt, self.lb, self.rb
 
+'''
+    This function parses boxes generated and computes a range of theta. 
+    Within the region, any nodes with theta in the range are highly likely to hit the obstacles 
+    Inputs: boxes - a list of boxes generated when hit obstacles
+    Output: Bk - the last box;
+            (min_theta, max_theta) - a range of theta 
+    NOTE: This method to process boxes might not be fully correct. It has not been proved to sound. 
+'''
 def parseBox(boxes):
     theta_array = []
     for b in boxes:

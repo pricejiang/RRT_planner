@@ -1,0 +1,10 @@
+{
+    "variables":["sx", "sx", "psi","v","delta"],
+    "initial":[50.0, 50.0, 0.93, 0.0, 0.0],
+    "method":1,
+    "goalBias":0.3,
+    "obstacle":2,
+    "kvalue":5,
+    "epsilon":2,
+    "directory":"model/Car_Kinematic"
+}
