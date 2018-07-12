@@ -77,20 +77,21 @@ class RRT():
                 p - try_goal_probability; the probability that Xgoal is picked as Xrand
                 obs - obstacle region Xobs
                 screen - the pygame screen for printing the game status
-                flag - indicate whether corner subtree method is using
+                data - important data from input file
         Output: the path from Xinit to Xgoal
 
     '''
-    def plan(self, K, goal, p, obs, screen, flag):
+    def plan(self, K, goal, obs, screen, data):
+        p, flag, k, epsilon = self.parseData(data)
         if p > 1 or p < 0:
-            print "invalid p"
+            print "Invalid goalbias p; please set p = [0.0, 1.0]"
             return None
         color = (155, 240, 200)
         region = []
         degree = len(self.Xinit.state)
         for i in range(K):
             print i, 'th iteration'
-            # print region
+
             # Find Xrand
             if random.random() < p:
                 Xrand = ((goal[1]+goal[0])/2, (goal[3]+goal[2])/2, random.random()*2*np.pi, 0, 0)
@@ -124,15 +125,16 @@ class RRT():
                 drawScreen(screen, p1, p2, goal, obs, color)
             # Else, delete a few nodes on the branch
             elif flag == 1:
-                print "collide"
+                print "Collide with Obstacles"
+
                 # Obtain X_array and epsilon_array
-                X_array = self.collisionClean(Xnew)
-                epsilon = 2
+                X_array = self.collisionClean(Xnew, k)
                 epsilon_array = self.branchElim(X_array, epsilon)
                 boxes = []
                 for i in range(len(X_array)):
                     b = box(X_array[i], epsilon_array[i])
                     boxes.append(b)
+
                 # Draw the reachtube boxes
                 drawRec(screen, boxes, obs, color)
                 # Perform a few checks to get the corner point for subtree initiation
@@ -140,13 +142,16 @@ class RRT():
                 boxCheck =  boxChecker(Bk, obs, self.winsize)
                 cornerPoints = self.getXsubInit(boxCheck, Bk)
                 
+
                 # Grow the subtree with XsubInit
+                # NOTE: This part is subject to change. There could be a better subtree init point
+                #       Set the new node's direction to goal or to the closed node Xc might not be the best choices
                 for point in cornerPoints:
                     point = [int(point[0]), int(point[1])]
-                    for j in range(degree):
-                        if j < 2:
-                            continue
-                        point.append(random.randint(int(Bk.center.state[j]-epsilon), int(Bk.center.state[j]+epsilon)))
+                    # for j in range(degree):
+                    #     if j < 2:
+                    #         continue
+                    #     point.append(random.randint(int(Bk.center.state[j]-epsilon), int(Bk.center.state[j]+epsilon)))
                 
                     Xc = self.findNearest(point)
                     # Determine the angle to start 
@@ -154,13 +159,19 @@ class RRT():
                     if connectChecker(point, goal, obs):
                         gc = ((goal[1]+goal[0])/2, (goal[3]+goal[2])/2)
                         theta_prime = atan((gc[1]-point[1])/(gc[0]-point[0]))
-                    # Otherwise, randomly select theta to be any direction opposite to the collision
+                    # Otherwise, set to the closed node Xc in the tree
                     else:
                         theta_prime = Xc.state[2]
-                    point[2] = theta_prime
+                    point.append(theta_prime)
+
+                    # Set other parameters to closed node Xc in the tree
+                    for j in range(degree):
+                        if j < 3:
+                            continue
+                        point.append(Xc.state[j])
                     Xnew = node(point, Xc)
-                # Xnew.state[2] = Xc.state[2]
                     self.nodes.append(Xnew)
+                # Put the outer most box just generted into region list
                 region.append(parseBox(boxes))
 
             
@@ -184,25 +195,14 @@ class RRT():
         Inputs: Xnew - the point where collision happens
         Output: A list of nodes on the collision branch
     '''
-    def collisionClean(self, Xnew):
-        # n = Xnew.parent
-        # while True:
-        #     if n == self.Xinit:
-        #         break
-        #     if len(n.children) >= 2:
-        #         break
-        #     self.nodes.remove(n)
-        #     n = n.parent
-        
+    def collisionClean(self, Xnew, k):
         x = Xnew.parent
         X_array = []
         # pdb.set_trace()
-        for i in range(4):
+        for i in range(k):
             if x == self.Xinit:
                 break
             X_array.append(x)
-            # if len(x.children) >= 2:
-            #     break
             if x in self.nodes:
                 self.nodes.remove(x)
             x = x.parent
@@ -216,6 +216,8 @@ class RRT():
         Inputs: X_array - a list of nodes on the collsion branch
                 epsilon - the radius of the initial box
         Output: epsilon_array - the radius of all boxes 
+        NOTE:   This function is subject to changes. Use under-approximation instead of 
+                over-approximation that is currently in use
     '''
     def branchElim(self, X_array, epsilon):
         X0 = X_array[0]
@@ -227,7 +229,7 @@ class RRT():
             # The first point is X0
             if i == 0:
                 Xn = X0.state
-            # Random configuration on 5 dimensions
+            # Random configuration on all dimensions
             else:
                 x = random.randint(int(X0.state[0])-epsilon, int(X0.state[0])+epsilon)
                 if x > self.winsize[0]:
@@ -246,7 +248,6 @@ class RRT():
                         continue
                     tmp = random.randint(int(X0.state[i])-epsilon, int(X0.state[i])+epsilon)
                     Xn.append(tmp)
-            # Xn = [x, y, theta, vy, r]
             X0_array.append(Xn)
         epsilon_prime = epsilon
         Xc = X0
@@ -358,9 +359,6 @@ class RRT():
         This function returns a corner of the outer most box as the subtree initial node
     '''
     def getXsubInit(self, boxCheck, Bk):
-        xg = Bk.xg
-        yg = Bk.yg
-        r = Bk.epsilon
         # Four corner points coordinate
         lt = Bk.lt
         rt = Bk.rt
@@ -379,3 +377,10 @@ class RRT():
         
         random.shuffle(ret)
         return ret
+
+    def parseData(self, data):
+        p = data["goalBias"]
+        flag = data["method"]
+        k = data["kvalue"]
+        epsilon = data["epsilon"]
+        return p, flag, k, epsilon

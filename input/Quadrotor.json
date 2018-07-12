@@ -1,6 +1,10 @@
 {
     "variables":["x1", "x2", "x9","x3","x4","x5","x6","x7","x8","x9","10","x11","x12"],
     "initial":[350.0, 150.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-    "method":0,
+    "method":1,
+    "goalBias":0.3,
+    "obstacle":2,
+    "kvalue":4,
+    "epsilon":2,
     "directory":"model/Quadrotor"
 }

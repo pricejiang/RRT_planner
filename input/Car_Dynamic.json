@@ -2,5 +2,9 @@
     "variables":["xg", "yg", "theta","vy","r"],
     "initial":[50.0, 50.0, 0.0, 0.0, 0.0],
     "method":1,
+    "goalBias":0.3,
+    "obstacle":2,
+    "kvalue":4,
+    "epsilon":2,
     "directory":"model/Car_Dynamic"
 }

@@ -43,7 +43,7 @@ def getObs(n):
 
 def main(argv):
     if len(argv) < 2:
-        print "Must add a model name"
+        print "Must choose a model"
         return None
 
     module, data = parseInput(argv)
@@ -57,15 +57,15 @@ def main(argv):
     # Obtain obstacle and goal
     obs = []
     # n = raw_input('Please select obstacle scenario, 1 or 2\n')
-    n = 2
-    obs = getObs(int(n))
+    # n = 2
+    obs = getObs(data["obstacle"])
     goal = (450,500,450,500)
     # Initialize screen
     screen = initDraw(winsize)
 
     # Call planner
     startTime = time.time()
-    ret = G.plan(5000, goal, 0.3, obs, screen, data["method"])
+    ret = G.plan(5000, goal, obs, screen, data)
     endTime = time.time()
 
     # Parse and draw result

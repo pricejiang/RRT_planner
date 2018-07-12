@@ -80,6 +80,7 @@ def drawRec(screen, boxes, obs, color):
 
 '''
     This function draws a given node specified by t(type) on the screen
+    This function is for debug purposes. 
     Inputs: screen - the screen to draw on
             Xn - the node to be drawn
             t - type; 1 - Xrand; 2 - Xnear

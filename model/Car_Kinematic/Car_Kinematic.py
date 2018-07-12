@@ -20,7 +20,7 @@ max_a = 11.5
 inf = np.inf
 
 def Car_Kinematic(Xn, u):
-    sx, sy, psi, delta, v = Xn
+    sx, sy, psi, v, delta = Xn
     v_delta, a = u
     sx = float(sx)
     sy = float(sy)
@@ -47,7 +47,7 @@ def Car_Kinematic(Xn, u):
     v_dot = a
     psi_dot = v/lwb*np.tan(delta)
 
-    dydt = np.array([sx_dot, sy_dot, psi_dot, delta_dot, v_dot])
+    dydt = np.array([sx_dot, sy_dot, psi_dot, v_dot, delta_dot])
     return dydt
 
 '''
