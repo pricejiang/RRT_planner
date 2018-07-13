@@ -7,6 +7,7 @@ Implementation of RRT path planner and several dynamic models
 There are some packages needed:
 * **z3-solver** 
 * **pygame**
+* **numpy**
 ### Run
 Simply type:
 ```
