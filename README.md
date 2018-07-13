@@ -43,3 +43,10 @@ A kinematic single track car model.
 Source: [CommonRoad: Vehicle Models](https://gitlab.com/commonroad/commonroad.gitlab.io/raw/master/documentation/vehicleModels_commonRoad.pdf) by Matthias Althoff
 
 Model 3: Kinematic Single-Track Model 
+
+### Car Linear Model
+A linear dynamic car model. 
+
+It is developed by simply eliminated sin and cos terms in the Car_Dyanmic model. 
+
+The way we do that is using small angle approximation. 
