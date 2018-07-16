@@ -11,6 +11,25 @@ max_steer = np.pi/6
 
 inf = np.inf
 
+'''
+    Bicycle Car Dynamic model. 
+    State represetned by [xg, yg, theta, vy, r], where: 
+        xg, yg are the location center of gravity of the car
+        theta is orientation of the car
+        vy is the lateral speed
+        r is the yaw rate/angular velocity
+
+        longitudinal speed vx is viewed as a constant in this model
+    Inputs: Xn - current state; a list
+            delta_f - steering angle of the car
+    Output: dydt
+    NOTE: The difference of this model to Car_Dynamic model is that: 
+            this model gets rid of cos and sin terms in vy_dot 
+            and r_dot by using small angle approximation. 
+
+            But for xg_dot and yg_dot, trignometry terms remain; I am 
+            still not sure if this can be seen as a linear model. 
+'''
 def Car_Linear(Xn, delta_f):
     # Obtain vairables
     xg, yg, theta, vy, r = Xn

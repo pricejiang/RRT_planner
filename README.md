@@ -34,13 +34,15 @@ Note: there are some mistakes in the paper.
 
 A Quadcopter dynamic model. 
 
-Source Paper: https://easychair.org/publications/open/sr6 model 3.3
+Source Paper: https://easychair.org/publications/open/sr6 
+
+Model 3.3
 
 ### Car Kinematic Model
 
 A kinematic single track car model. 
 
-Source: [CommonRoad: Vehicle Models](https://gitlab.com/commonroad/commonroad.gitlab.io/raw/master/documentation/vehicleModels_commonRoad.pdf) by Matthias Althoff
+Source: [CommonRoad: Vehicle Models](https://gitlab.com/commonroad/commonroad.gitlab.io/raw/master/documentation/vehicleModels_commonRoad.pdf)
 
 Model 3: Kinematic Single-Track Model 
 

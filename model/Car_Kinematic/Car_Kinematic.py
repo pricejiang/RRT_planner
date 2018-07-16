@@ -19,7 +19,21 @@ max_a = 11.5
 
 inf = np.inf
 
+'''
+    Kinematic cal model.
+    State represetned by [sx, sy, psi, v, delta], where: 
+        sx, sg are the location center of gravity of the car
+        psi is orientation of the car
+        v is the speed
+        delta is the steer angle
+
+    Inputs: Xn - current state; a list
+            u - input specified as [v_delta, a]
+    Output: dydt
+    
+'''
 def Car_Kinematic(Xn, u):
+    # Unpack variables
     sx, sy, psi, v, delta = Xn
     v_delta, a = u
     sx = float(sx)
@@ -30,6 +44,7 @@ def Car_Kinematic(Xn, u):
 
     lwb = 2.578
 
+    
     if delta > max_steer:
         delta = max_steer
     elif delta < min_steer:
@@ -39,7 +54,6 @@ def Car_Kinematic(Xn, u):
         v = max_v
     elif v < min_v: 
         v = min_v
-    
 
     sx_dot = v*np.cos(psi)
     sy_dot = v*np.sin(psi)
