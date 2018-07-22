@@ -1,6 +1,6 @@
 {
     "variables":["sx", "sx", "psi","v","delta"],
-    "initial":[50.0, 50.0, 0.93, 0.0, 0.0],
+    "initial":[350.0, 150.0, 0.93, 0.0, 0.0],
     "method":1,
     "goalBias":0.3,
     "obstacle":2,

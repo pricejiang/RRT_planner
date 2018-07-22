@@ -38,17 +38,17 @@ def Car_Dynamic(Xn, delta_f):
     # mass of the car, unit: kg
     m = 1500
     # longitudinal velocity, unit: m/s
-    vx = 15.5
+    vx = 28
     # length of front half of the car, unit: m
     Lf = 1.3
     # length of rear half of the car, unit: m
     Lr = 1.7
     # cornering stiffness coefficient
-    Cf = 10000
-    Cr = 12000
+    Cf = 20000
+    Cr = 20000
 
     # moment of inertia
-    Iz = 2000
+    Iz = 6000
 
     cosTheta = np.cos(theta)
     sinTheta = np.sin(theta)

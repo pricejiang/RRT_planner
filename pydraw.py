@@ -15,7 +15,7 @@ blue = (0, 0, 255)
 def initDraw(winsize):
     pygame.init()
     screen = pygame.display.set_mode(winsize)
-    pygame.display.set_caption('Bicycle Model       Test        05/2018')
+    pygame.display.set_caption('Bicycle Model       Test        07/2018')
     
     screen.fill(black)
     return screen

@@ -29,13 +29,15 @@ class node():
 class RRT():
     
     def __init__(self, init, selectInput, randomConfig, tryInput, winsize):
-        self.nodes = []
-        self.Xinit = node(init, None)
-        self.nodes.append(self.Xinit)
-        self.Xnear = node(None, None)
-        self.selectInput = selectInput
+        self.nodes = [] # data structure to hold tree nodes
+        self.Xinit = node(init, None)   # initial point
+        self.nodes.append(self.Xinit)   
+        self.Xnear = node(None, None)   # Xnear node 
+        # Functions introduced from modules
+        self.selectInput = selectInput  
         self.randomConfig = randomConfig
         self.tryInput = tryInput
+
         self.winsize = winsize
 
 
@@ -47,8 +49,10 @@ class RRT():
     def findNearest(self, Xrand):
         nn = self.nodes[0]
         for p in self.nodes:
+            # Avoid picking the same node as last time
             if p == self.Xnear:
                 continue
+            
             if dist(p.state, Xrand) < dist(nn.state, Xrand):
                 nn = p
         return nn
@@ -62,6 +66,7 @@ class RRT():
         node = Xnew
         path = []
         path.append(node.state)
+        # Iterate to find the inital point
         while(node != self.Xinit):
             node = node.parent
             path.append(node.state)
@@ -92,33 +97,40 @@ class RRT():
         for i in range(K):
             print i, 'th iteration'
 
-            # Find Xrand
+            # Set Xrand
             if random.random() < p:
                 Xrand = ((goal[1]+goal[0])/2, (goal[3]+goal[2])/2, random.random()*2*np.pi, 0, 0)
             else:
                 Xrand = self.randomConfig(self.winsize[0], self.winsize[1])
 
-            # Pick Xnear
             # pdb.set_trace()
             # drawNode(screen, Xrand, 1)
+            # Pick Xnear
             self.Xnear = self.findNearest(Xrand)
             print self.Xnear.state
             # drawNode(screen, self.Xnear.state, 2)
+
             # Calculate new state from using Xrand and Xnear
             u = self.selectInput(Xrand, self.Xnear.state, obs)
             if u == None:
                 continue
-            Xnew = node(u, self.Xnear)
-            p1 = (int(self.Xnear.state[0]), int(self.Xnear.state[1]))
-            p2 = (int(Xnew.state[0]), int(Xnew.state[1]))
-            # Check if connecting to Xnew will collide with obstacles
+
+            # Check if the new state is within the hopeless region
             if region != []:
-                if regionChecker(region, Xnew):
+                if regionChecker(region, u):
                     continue
+
+            # Check if connecting to Xnew will collide with obstacles
+            p1 = (int(self.Xnear.state[0]), int(self.Xnear.state[1]))
+            p2 = (int(u[0]), int(u[1]))
             collision = collisionChecker(p1, p2, obs)
-                
+
+            if i == 0 and collision:
+                print "Initial node on obstacle!! Please pick another initial node. "
+                return None
             # If no intersections with obstacles, add Xnew to the tree and upate the graph
             if not collision:
+                Xnew = node(u, self.Xnear)
                 self.nodes.append(Xnew)
                 self.Xnear.children.append(Xnew)
                 
@@ -126,9 +138,8 @@ class RRT():
             # Else, delete a few nodes on the branch
             elif flag == 1:
                 print "Collide with Obstacles"
-
                 # Obtain X_array and epsilon_array
-                X_array = self.collisionClean(Xnew, k)
+                X_array = self.collisionClean(self.Xnear, k)
                 epsilon_array = self.branchElim(X_array, epsilon)
                 boxes = []
                 for i in range(len(X_array)):
@@ -137,22 +148,17 @@ class RRT():
 
                 # Draw the reachtube boxes
                 drawRec(screen, boxes, obs, color)
-                # Perform a few checks to get the corner point for subtree initiation
-                Bk = boxes[-1]
+                # Perform a few checks to get the corner points for subtree initiation
+                Bk = boxes[-1] # last box
                 boxCheck =  boxChecker(Bk, obs, self.winsize)
                 cornerPoints = self.getXsubInit(boxCheck, Bk)
                 
 
-                # Grow the subtree with XsubInit
-                # NOTE: This part is subject to change. There could be a better subtree init point
-                #       Set the new node's direction to goal or to the closed node Xc might not be the best choices
+                # Grow the subtree with cornerPoints
+                # Set the new node's direction to goal or to the closed node Xc; it might not be the best choice
                 for point in cornerPoints:
                     point = [int(point[0]), int(point[1])]
-                    # for j in range(degree):
-                    #     if j < 2:
-                    #         continue
-                    #     point.append(random.randint(int(Bk.center.state[j]-epsilon), int(Bk.center.state[j]+epsilon)))
-                
+                   
                     Xc = self.findNearest(point)
                     # Determine the angle to start 
                     # If the point can be directly connected to goal, set theta directly to the goal
@@ -164,7 +170,7 @@ class RRT():
                         theta_prime = Xc.state[2]
                     point.append(theta_prime)
 
-                    # Set other parameters to closed node Xc in the tree
+                    # Set other degrees of parameters to closed node Xc in the tree
                     for j in range(degree):
                         if j < 3:
                             continue
@@ -195,8 +201,8 @@ class RRT():
         Inputs: Xnew - the point where collision happens
         Output: A list of nodes on the collision branch
     '''
-    def collisionClean(self, Xnew, k):
-        x = Xnew.parent
+    def collisionClean(self, Xn, k):
+        x = Xn
         X_array = []
         # pdb.set_trace()
         for i in range(k):
