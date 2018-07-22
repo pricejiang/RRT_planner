@@ -7,6 +7,7 @@ Implementation of RRT path planner and several dynamic models
 There are some packages needed:
 * **z3-solver** 
 * **pygame**
+* **numpy**
 ### Run
 Simply type:
 ```
@@ -33,12 +34,21 @@ Note: there are some mistakes in the paper.
 
 A Quadcopter dynamic model. 
 
-Source Paper: https://easychair.org/publications/open/sr6 model 3.3
+Source Paper: https://easychair.org/publications/open/sr6 
+
+Model 3.3
 
 ### Car Kinematic Model
 
 A kinematic single track car model. 
 
-Source: [CommonRoad: Vehicle Models](https://gitlab.com/commonroad/commonroad.gitlab.io/raw/master/documentation/vehicleModels_commonRoad.pdf) by Matthias Althoff
+Source: [CommonRoad: Vehicle Models](https://gitlab.com/commonroad/commonroad.gitlab.io/raw/master/documentation/vehicleModels_commonRoad.pdf)
 
 Model 3: Kinematic Single-Track Model 
+
+### Car Linear Model
+A linear dynamic car model. 
+
+It is developed by simply eliminated sin and cos terms in the Car_Dyanmic model. 
+
+The way we do that is using small angle approximation. 

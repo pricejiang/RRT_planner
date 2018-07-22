@@ -1,4 +1,3 @@
-from z3 import *
 from math import sqrt, acos, sin
 import numpy as np
 
@@ -35,59 +34,55 @@ def goalChecker(Xnew, goal):
     Return: True if intersects
             False if not 
 '''
-def obsCheck(x, y, rrtLine, obsLine, p1, p2, ob1, ob2):
-    # Initialize solver() and add two lines into it
-    s = Solver()
-    s.add(rrtLine)
-    s.add(obsLine)
 
-    # Add endpoints to define boundry
-    if p1[0] < p2[0]:
-        s.add(And(x>=p1[0], x<=p2[0]))
-    else:
-        s.add(And(x>=p2[0], x<=p1[0]))
-    
-    if p1[1] < p2[1]:
-        s.add(And(y>=p1[1], y<=p2[1]))
-    else:
-        s.add(And(y>=p2[1], y<=p1[1]))
-    
-    s.add(And(x>=ob1[0], x<=ob2[0]))
-    s.add(And(y>=ob1[1], y<=ob2[1]))
+def obsCheck(a,b,c,d):
+    a1 = b[1]-a[1]
+    b1 = a[0]-b[0]
+    c1 = a1*a[0]+b1*a[1]
 
-    # Check result
-    if s.check() == sat:
-        return True
-    else:
+    a2 = d[1]-c[1]
+    b2 = c[0]-d[0]
+    c2 = a2*c[0]+b2*c[1]
+
+    determinant = a1*b2 - a2*b1
+
+    if determinant == 0:
         return False
-
+    else:
+        x = (b2*c1 - b1*c2)/determinant
+        y = (a1*c2 - a2*c1)/determinant
+        if x - min(a[0], b[0]) < -0.01 or x - max(a[0], b[0]) > 0.01:
+            return False
+        if x - min(c[0], d[0]) < -0.01 or x - max(c[0], d[0]) > 0.01:
+            return False
+        if y - min(a[1], b[1]) < -0.01 or y - max(a[1], b[1]) > 0.01:
+            return False
+        if y - min(c[1], d[1]) < -0.01 or y - max(c[1], d[1]) > 0.01:
+            return False
+        return True
 '''
     This function checks whether the line defined by p1 and p2 intersects with any of the obstacle line
     Return: True if intersects
             False if not
 '''
 def collisionChecker(p1, p2, obs):
-    x1 = p1[0]
-    y1 = p1[1]
-
-    x2 = p2[0]
-    y2 = p2[1]
-
-    x = Real('x')
-    y = Real('y')
-
     flag = False
-    rrtLine = getEqn(x, y, (x1,y1), (x2, y2))
     # Iterates to see if rrtLine intersects with any obstacles 
     for ob in obs:
-        obsLine = getEqn(x, y, ob[0], ob[1])
-        # print obsLine
-        if obsCheck(x, y, rrtLine, obsLine, (x1,y1), (x2, y2), ob[0], ob[1]) == True:
+        if obsCheck(p1,p2,ob[0],ob[1])==True:
             flag = True
-        # if distanceChecker(x, y, obsLine, (x2, y2), ob[0], ob[1]):
-        #     flag = True
     return flag
 
+'''
+    This function identifies the safe corners of the box Bk. 
+    By safe I mean the corner is directly connectable from its center (xg, yg). 
+    NOTE However, this way might not be the correct way to do it, 
+    since directly connectable does not mean approachable by the dynamics. 
+
+    Inputs: Bk - the box to deal with
+            obs - the list of obstacles
+    Output: a,b,c,d - booleans represents the safety of corners left-top, right-top, left-bottom, right-bottom
+'''
 def boxChecker(Bk, obs, winsize):
     xg = Bk.xg
     yg = Bk.yg
@@ -98,46 +93,23 @@ def boxChecker(Bk, obs, winsize):
     lb = Bk.lb
     rb = Bk.rb
 
-    x = Real('x')
-    y = Real('y')
+    print 'lt, rt, lb, rb are ', lt, rt, lb, rb
+    print 'xg, yg', (xg, yg)
+
     a,b,c,d = False, False, False, False
-    ltLine = getEqn(x, y, (xg, yg), lt)
-    rtLine = getEqn(x, y, (xg, yg), rt)
-    lbLine = getEqn(x, y, (xg, yg), lb)
-    rbLine = getEqn(x, y, (xg, yg), rb)
-    ob_k = None
+
     for ob in obs:
-        obsLine = getEqn(x, y, ob[0], ob[1])
-        if obsCheck(x, y, ltLine, obsLine, (xg, yg), lt, ob[0], ob[1]):
+        if obsCheck(lt, (xg,yg), ob[0], ob[1]):
             a = True
-            ob_k = ob
-        if obsCheck(x, y, rtLine, obsLine, (xg, yg), rt, ob[0], ob[1]):
+        if obsCheck(rt, (xg,yg), ob[0], ob[1]):
             b = True
-            ob_k = ob
-        if obsCheck(x, y, lbLine, obsLine, (xg, yg), lb, ob[0], ob[1]):
+        if obsCheck(lb, (xg,yg), ob[0], ob[1]):
             c = True
-            ob_k = ob
-        if obsCheck(x, y, rbLine, obsLine, (xg, yg), rb, ob[0], ob[1]):
+        if obsCheck(rb, (xg,yg), ob[0], ob[1]):
             d = True
-            ob_k = ob
     
-    # print 'lt is  ',a
-    # print 'rt is  ',b
-    # print 'lb is  ',c
-    # print 'rb is  ',d
-    return a,b,c,d,ob_k
+    return a,b,c,d
 
-# def eucDistance(p1, p2):
-#     return sqrt((p1[0]-p2[0])*(p1[0]-p2[0]) + (p1[1]-p2[1])*(p1[1]-p2[1]))
-
-# def distanceChecker(p, ob):
-#     l1 = eucDistance(p, ob[0])
-#     l2 = eucDistance(p, ob[1])
-#     L = eucDistance(ob[0], ob[1])
-
-#     beta = acos((l2*l2 + L*L - l1*l1)/(2*l2*L))
-#     h = sin(beta)*l2
-#     return h < 5
 
 '''
     This function checks whether the given point p 
@@ -149,9 +121,9 @@ def connectChecker(p, goal, obs):
     return not collisionChecker(p, a, obs)
 
 def regionChecker(region, X):
-    xg = X.state[0]
-    yg = X.state[1]
-    theta = X.state[2]
+    xg = X[0]
+    yg = X[1]
+    theta = X[2]
     for r in region:
         box = r[0]
         theta_range = r[1]

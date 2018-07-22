@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import math
 import random
-# from ... import helper
+
 
 # Some global variabes, angle in rad
 min_steer = -np.pi/6
@@ -20,12 +20,17 @@ inf = np.inf
         r is the yaw rate/angular velocity
 
         longitudinal speed vx is viewed as a constant in this model
-    Source: http://www.cs.cmu.edu/~motionplanning/reading/PlanningforDynamicVeh-1.pdf 
     Inputs: Xn - current state; a list
             delta_f - steering angle of the car
     Output: dydt
+    NOTE: The difference of this model to Car_Dynamic model is that: 
+            this model gets rid of cos and sin terms in vy_dot 
+            and r_dot by using small angle approximation. 
+
+            But for xg_dot and yg_dot, trignometry terms remain; I am 
+            still not sure if this can be seen as a linear model. 
 '''
-def Car_Dynamic(Xn, delta_f):
+def Car_Linear(Xn, delta_f):
     # Obtain vairables
     xg, yg, theta, vy, r = Xn
     xg = float(xg)
@@ -38,37 +43,34 @@ def Car_Dynamic(Xn, delta_f):
     # mass of the car, unit: kg
     m = 1500
     # longitudinal velocity, unit: m/s
-    vx = 28
+    vx = 20
     # length of front half of the car, unit: m
     Lf = 1.3
     # length of rear half of the car, unit: m
     Lr = 1.7
     # cornering stiffness coefficient
-    Cf = 20000
-    Cr = 20000
+    Cf = 10000
+    Cr = 12000
 
     # moment of inertia
     Iz = 6000
 
     cosTheta = np.cos(theta)
     sinTheta = np.sin(theta)
-    cosDelta = np.cos(delta_f)
 
-    # Constants A,B,C,D,E,F given in the paper
-    A = -(Cf*cosDelta + Cr)/(m*vx)
-    B = (-Lf*Cf*cosDelta + Lr*Cr)/(m*vx) - vx
-    C = (-Lf*Cf*cosDelta + Lr*Cr)/(Iz*vx)
-    D = -(Lf*Lf*Cf*cosDelta + Lr*Lr*Cr)/(Iz*vx)
-    E = (Cf*cosDelta)/m
-    F = (Lf*Cf*cosDelta)/Iz
+    A = -(Cf+Cr)/(m*vx)
+    B = (-Lf*Cf + Lr*Cr)/(m*vx) - vx
+    C = (-Lf*Cf + Lr*Cr)/(Iz*vx)
+    D = -(Lf*Lf*Cf + Lr*Lr*Cr)/(Iz*vx)
+    E = Cf/m
+    F = Lf*Iz/m
 
-    # differential equations
     xg_dot = vx*cosTheta - vy*sinTheta
     yg_dot = vx*sinTheta + vy*cosTheta
     theta_dot = r
     vy_dot = A*vy + B*r + E*delta_f
     r_dot = C*vy + D*r + F*delta_f
-    
+
     # Return dy/dt
     dydt = np.array([float(xg_dot), float(yg_dot), float(theta_dot), float(vy_dot), float(r_dot)])
     return dydt 
@@ -95,10 +97,10 @@ def randomConfig(height, width):
 '''
 def newState(Xn, delta_f):
     # Fourth-Order Runge-Kutta method
-    k1 = Car_Dynamic(Xn, delta_f)
-    k2 = Car_Dynamic(Xn+k1/2, delta_f)
-    k3 = Car_Dynamic(Xn+k2/2, delta_f)
-    k4 = Car_Dynamic(Xn+k3, delta_f)
+    k1 = Car_Linear(Xn, delta_f)
+    k2 = Car_Linear(Xn+k1/2, delta_f)
+    k3 = Car_Linear(Xn+k2/2, delta_f)
+    k4 = Car_Linear(Xn+k3, delta_f)
     delta_t = 0.2
     Xnew = Xn + (k1 + 2*k2 + 2*k3 + k4)*delta_t/6
     Xnew = [float(Xnew[0]), float(Xnew[1]), float(Xnew[2]), float(Xnew[3]), float(Xnew[4])]
@@ -192,7 +194,7 @@ def TC_Simulate(Mode, initial, time_bound):
         newt.append(float(format(step, '.2f')))
     t = newt
     delta = 0
-    sol = odeint(Car_Dynamic, initial, t, args=(delta,), hmax=time_step)
+    sol = odeint(Car_Linear, initial, t, args=(delta,), hmax=time_step)
 
     # Construct the final output
     trace = []
@@ -216,3 +218,4 @@ if __name__ == "__main__":
     
         plt.plot(a, b, '-r')
         plt.show()
+
