@@ -11,6 +11,13 @@ from operator import itemgetter
 from box import *
 from helper import *
 
+''' 
+    NOTE This variable controls whether to draw real-time updates of RRT search tree
+    draw = 0 - no drawing but final path; best performance
+    draw = 1 - draw real-time updates of search tree
+    draw = 2 - draw how the Xrand nodes are chosen
+'''
+draw = 1
 
 '''
     node class: basic element of RRT search tree
@@ -104,7 +111,8 @@ class RRT():
                 Xrand = self.randomConfig(self.winsize[0], self.winsize[1])
 
             # pdb.set_trace()
-            # drawNode(screen, Xrand, 1)
+            if draw == 2:
+                drawNode(screen, Xrand, 1)
             # Pick Xnear
             self.Xnear = self.findNearest(Xrand)
             print self.Xnear.state
@@ -134,7 +142,8 @@ class RRT():
                 self.nodes.append(Xnew)
                 self.Xnear.children.append(Xnew)
                 
-                drawScreen(screen, p1, p2, goal, obs, color)
+                if draw:
+                    drawScreen(screen, p1, p2, goal, obs, color)
             # Else, delete a few nodes on the branch
             elif flag == 1:
                 print "Collide with Obstacles"
@@ -147,7 +156,8 @@ class RRT():
                     boxes.append(b)
 
                 # Draw the reachtube boxes
-                drawRec(screen, boxes, obs, color)
+                if draw:
+                    drawRec(screen, boxes, obs, color)
                 # Perform a few checks to get the corner points for subtree initiation
                 Bk = boxes[-1] # last box
                 boxCheck =  boxChecker(Bk, obs, self.winsize)
