@@ -1,6 +1,5 @@
 from RRT import *
 import random
-from z3 import *
 from pydraw import *
 import time
 from util import *
@@ -65,7 +64,7 @@ def main(argv):
 
     # Call planner
     startTime = time.time()
-    ret = G.plan(5000, goal, obs, screen, data)
+    ret = G.plan(500000, goal, obs, screen, data)
     endTime = time.time()
 
     # Parse and draw result
